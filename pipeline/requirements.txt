@@ -1,0 +1,3 @@
+# Unofficial Beli SDK, pinned to a commit: the API is reverse-engineered and moves under us.
+beli_api @ git+https://github.com/ProjectBarks/beli-api@e108498295d4878f834f1cdcc3f74592e23f080e#subdirectory=sdks/python
+httpx>=0.27,<0.29
