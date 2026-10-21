@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+if grep -qiE 'Co-Authored-By|claude|codex|chatgpt' "$1"; then
+    echo "ERROR: Commit message contains a blocked term (Co-Authored-By, claude, codex, chatgpt)."
+    exit 1
+fi
