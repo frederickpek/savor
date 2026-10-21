@@ -1,0 +1,1002 @@
+{
+ "guide": "MICHELIN Guide Singapore 2026",
+ "as_of": "2026-10",
+ "source": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurants",
+ "note": "Hand-maintained snapshot. business_id links to the Beli catalogue. Re-scrape when the next guide is out.",
+ "restaurants": [
+  {
+   "name": "Les Amis",
+   "award": 3,
+   "business_id": 83738,
+   "cuisine": "French",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/les-amis"
+  },
+  {
+   "name": "Odette",
+   "award": 3,
+   "business_id": 71193,
+   "cuisine": "French Contemporary",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/odette"
+  },
+  {
+   "name": "Zén",
+   "award": 3,
+   "business_id": 83739,
+   "cuisine": "European Contemporary",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/zen"
+  },
+  {
+   "name": "1887 by André",
+   "award": 2,
+   "business_id": 2667647,
+   "cuisine": "French Contemporary",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/1887-by-andre"
+  },
+  {
+   "name": "Cloudstreet",
+   "award": 2,
+   "business_id": 71199,
+   "cuisine": "Innovative",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/cloudstreet"
+  },
+  {
+   "name": "Jaan by Kirk Westaway",
+   "award": 2,
+   "business_id": 71183,
+   "cuisine": "British Contemporary",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/jaan-by-kirk-westaway"
+  },
+  {
+   "name": "Meta",
+   "award": 2,
+   "business_id": 74513,
+   "cuisine": "Innovative",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/meta-570540"
+  },
+  {
+   "name": "Saint Pierre",
+   "award": 2,
+   "business_id": 171669,
+   "cuisine": "French Contemporary",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/saint-pierre"
+  },
+  {
+   "name": "Seroja",
+   "award": 2,
+   "business_id": 320672,
+   "cuisine": "Malaysian",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/seroja"
+  },
+  {
+   "name": "Shoukouwa",
+   "award": 2,
+   "business_id": 98895,
+   "cuisine": "Sushi",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/shoukouwa"
+  },
+  {
+   "name": "Sushi Sakuta",
+   "award": 2,
+   "business_id": 477015,
+   "cuisine": "Sushi",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/sushi-sakuta"
+  },
+  {
+   "name": "Thevar",
+   "award": 2,
+   "business_id": 172829,
+   "cuisine": "Innovative",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/thevar"
+  },
+  {
+   "name": "Araya",
+   "award": 1,
+   "business_id": 880835,
+   "cuisine": "Innovative",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/araya"
+  },
+  {
+   "name": "Born",
+   "award": 1,
+   "business_id": 222032,
+   "cuisine": "Innovative",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/born"
+  },
+  {
+   "name": "Buona Terra",
+   "award": 1,
+   "business_id": 172830,
+   "cuisine": "Italian Contemporary",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/buona-terra"
+  },
+  {
+   "name": "Burnt Ends",
+   "award": 1,
+   "business_id": 59829,
+   "cuisine": "Barbecue",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/burnt-ends-1200777"
+  },
+  {
+   "name": "CUT",
+   "award": 1,
+   "business_id": 84892,
+   "cuisine": "Steakhouse",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/cut"
+  },
+  {
+   "name": "Candlenut",
+   "award": 1,
+   "business_id": 85917,
+   "cuisine": "Peranakan",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/candlenut"
+  },
+  {
+   "name": "Cherry Garden by Chef Fei",
+   "award": 1,
+   "business_id": 328036,
+   "cuisine": "Cantonese",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/cherry-garden-by-chef-fei"
+  },
+  {
+   "name": "Hamamoto",
+   "award": 1,
+   "business_id": 279351,
+   "cuisine": "Sushi",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/hamamoto"
+  },
+  {
+   "name": "Hill Street Tai Hwa Pork Noodle",
+   "award": 1,
+   "business_id": 108108,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/hill-street-tai-hwa-pork-noodle"
+  },
+  {
+   "name": "Iggy's",
+   "award": 1,
+   "business_id": 89151,
+   "cuisine": "European Contemporary",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/iggy-s"
+  },
+  {
+   "name": "Imperial Treasure Fine Teochew Cuisine (Orchard)",
+   "award": 1,
+   "business_id": 126565,
+   "cuisine": "Teochew",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/imperial-treasure-fine-teochew-cuisine-orchard"
+  },
+  {
+   "name": "Jag",
+   "award": 1,
+   "business_id": 244278,
+   "cuisine": "French Contemporary",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/jag"
+  },
+  {
+   "name": "Jin Ting Wan",
+   "award": 1,
+   "business_id": 2030697,
+   "cuisine": "Cantonese",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/jin-ting-wan"
+  },
+  {
+   "name": "Labyrinth",
+   "award": 1,
+   "business_id": 117361,
+   "cuisine": "Innovative",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/labyrinth"
+  },
+  {
+   "name": "Lei Garden",
+   "award": 1,
+   "business_id": 104354,
+   "cuisine": "Cantonese",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/lei-garden-501509"
+  },
+  {
+   "name": "Lerouy",
+   "award": 1,
+   "business_id": 172900,
+   "cuisine": "French Contemporary",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/lerouy-1195638"
+  },
+  {
+   "name": "Loca Niru",
+   "award": 1,
+   "business_id": 2268897,
+   "cuisine": "Innovative",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/loca-niru"
+  },
+  {
+   "name": "Ma Cuisine",
+   "award": 1,
+   "business_id": 484390,
+   "cuisine": "French",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/ma-cuisine"
+  },
+  {
+   "name": "Marguerite",
+   "award": 1,
+   "business_id": 202354,
+   "cuisine": "Australian Contemporary",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/marguerite"
+  },
+  {
+   "name": "Nae:um",
+   "award": 1,
+   "business_id": 202356,
+   "cuisine": "Korean Contemporary",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/nae-um"
+  },
+  {
+   "name": "Nouri",
+   "award": 1,
+   "business_id": 85923,
+   "cuisine": "Innovative",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/nouri"
+  },
+  {
+   "name": "Omakase @ Stevens",
+   "award": 1,
+   "business_id": 749575,
+   "cuisine": "Innovative",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/omakase-stevens"
+  },
+  {
+   "name": "Pangium",
+   "award": 1,
+   "business_id": 211946,
+   "cuisine": "Peranakan",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/pangium"
+  },
+  {
+   "name": "Shisen Hanten",
+   "award": 1,
+   "business_id": 124307,
+   "cuisine": "Sichuan",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/shisen-hanten"
+  },
+  {
+   "name": "Summer Palace",
+   "award": 1,
+   "business_id": 85944,
+   "cuisine": "Cantonese",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/summer-palace-501658"
+  },
+  {
+   "name": "Summer Pavilion",
+   "award": 1,
+   "business_id": 107314,
+   "cuisine": "Cantonese",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/summer-pavillion"
+  },
+  {
+   "name": "Sushi Ichi",
+   "award": 1,
+   "business_id": 220760,
+   "cuisine": "Sushi",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/sushi-ichi"
+  },
+  {
+   "name": "Sushi Kimura +",
+   "award": 1,
+   "business_id": 2371942,
+   "cuisine": "Sushi",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/sushi-kimura-1247953"
+  },
+  {
+   "name": "Tenshima",
+   "award": 1,
+   "business_id": 890055,
+   "cuisine": "Tempura",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/tenshima"
+  },
+  {
+   "name": "Waku Ghin",
+   "award": 1,
+   "business_id": 98896,
+   "cuisine": "Japanese Contemporary",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/waku-ghin"
+  },
+  {
+   "name": "Whitegrass",
+   "award": 1,
+   "business_id": 267995,
+   "cuisine": "French Contemporary",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/whitegrass"
+  },
+  {
+   "name": "Willow",
+   "award": 1,
+   "business_id": 228342,
+   "cuisine": "Asian Contemporary",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/willow"
+  },
+  {
+   "name": "Yong Fu",
+   "award": 1,
+   "business_id": 1524549,
+   "cuisine": "Ningbo",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/yong-fu-1218314"
+  },
+  {
+   "name": "A Noodle Story",
+   "award": "bib",
+   "business_id": 333136,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/a-noodle-story"
+  },
+  {
+   "name": "Adam Rd Noo Cheng Big Prawn Noodle",
+   "award": "bib",
+   "business_id": 517444,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/adam-rd-noo-cheng-big-prawn-noodle"
+  },
+  {
+   "name": "Alliance Seafood",
+   "award": "bib",
+   "business_id": 115110,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/alliance-seafood"
+  },
+  {
+   "name": "Anglo Indian (Shenton Way)",
+   "award": "bib",
+   "business_id": 341100,
+   "cuisine": "Indian",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/anglo-indian-shenton-way"
+  },
+  {
+   "name": "Ar Er Soup",
+   "award": "bib",
+   "business_id": 1333169,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/ar-er-soup"
+  },
+  {
+   "name": "Bahrakath Mutton Soup",
+   "award": "bib",
+   "business_id": 1066550,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/bahrakath-mutton-soup"
+  },
+  {
+   "name": "Beach Road Fish Head Bee Hoon",
+   "award": "bib",
+   "business_id": 1253607,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/beach-road-fish-head-bee-hoon"
+  },
+  {
+   "name": "Bismillah Biryani (Little India)",
+   "award": "bib",
+   "business_id": 183696,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/bismillah-biryani"
+  },
+  {
+   "name": "Boon Keng Road Fish Head Bee Hoon",
+   "award": "bib",
+   "business_id": 2059169,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/boon-keng-road-fish-head-bee-hoon"
+  },
+  {
+   "name": "Boon Tong Kee (Balestier Road)",
+   "award": "bib",
+   "business_id": 183697,
+   "cuisine": "Singaporean",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/boon-tong-kee-balestier-road"
+  },
+  {
+   "name": "Chai Chuan Tou Yang Rou Tang",
+   "award": "bib",
+   "business_id": 384236,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/chai-chuan-tou-yang-rou-tang"
+  },
+  {
+   "name": "Chef Kang's Noodle House",
+   "award": "bib",
+   "business_id": 619426,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/chef-kang-s-noodle-house"
+  },
+  {
+   "name": "Cheok Kee",
+   "award": "bib",
+   "business_id": 603667,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/cheok-kee"
+  },
+  {
+   "name": "Chey Sua Carrot Cake",
+   "award": "bib",
+   "business_id": 506238,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/chey-sua-carrot-cake"
+  },
+  {
+   "name": "Chuan Kee Boneless Braised Duck",
+   "award": "bib",
+   "business_id": 494394,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/chuan-kee-boneless-braised-duck"
+  },
+  {
+   "name": "Cumi Bali",
+   "award": "bib",
+   "business_id": 246840,
+   "cuisine": "Indonesian",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/cumi-bali"
+  },
+  {
+   "name": "Da Shi Jia Big Prawn Mee",
+   "award": "bib",
+   "business_id": 181826,
+   "cuisine": "Singaporean",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/da-shi-jia"
+  },
+  {
+   "name": "Delhi Lahori",
+   "award": "bib",
+   "business_id": 458800,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/delhi-lahori"
+  },
+  {
+   "name": "Dudu Cooked Food",
+   "award": "bib",
+   "business_id": 740003,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/du-du-shou-shi"
+  },
+  {
+   "name": "Fei Fei Roasted • Noodle",
+   "award": "bib",
+   "business_id": 376727,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/fei-fei-roasted-%E2%80%A2-noodle"
+  },
+  {
+   "name": "Fico",
+   "award": "bib",
+   "business_id": 497334,
+   "cuisine": "Italian",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/fico-1213088"
+  },
+  {
+   "name": "Fu Ming Cooked Food",
+   "award": "bib",
+   "business_id": 433981,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/fu-ming-cooked-food"
+  },
+  {
+   "name": "Hai Nan Xing Zhou Beef Noodle",
+   "award": "bib",
+   "business_id": 740065,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/hai-nan-xing-zhou-beef-noodle"
+  },
+  {
+   "name": "Hai Nan Zai",
+   "award": "bib",
+   "business_id": 740063,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/hainan-zi"
+  },
+  {
+   "name": "Han Kee",
+   "award": "bib",
+   "business_id": 622578,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/han-kee"
+  },
+  {
+   "name": "Heng",
+   "award": "bib",
+   "business_id": 115109,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/heng"
+  },
+  {
+   "name": "Heng Heng Cooked Food",
+   "award": "bib",
+   "business_id": 603701,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/heng-heng-cooked-food"
+  },
+  {
+   "name": "Heng Kee",
+   "award": "bib",
+   "business_id": 497140,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/heng-kee"
+  },
+  {
+   "name": "Hong Heng Fried Sotong Prawn Mee",
+   "award": "bib",
+   "business_id": 830893,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/hong-heng-fried-sotong-prawn-mee"
+  },
+  {
+   "name": "Hong Kong Yummy Soup",
+   "award": "bib",
+   "business_id": 843301,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/hong-kong-yummy-soup"
+  },
+  {
+   "name": "Hoo Kee Bak Chang",
+   "award": "bib",
+   "business_id": 437076,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/hoo-kee-bak-chang"
+  },
+  {
+   "name": "Hui Wei Chilli Ban Mian",
+   "award": "bib",
+   "business_id": 593246,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/hui-wei-chilli-ban-mian"
+  },
+  {
+   "name": "Hup Kee Fried Oyster Omelette",
+   "award": "bib",
+   "business_id": 465190,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/hup-kee-fried-oyster-omelette"
+  },
+  {
+   "name": "Indocafé",
+   "award": "bib",
+   "business_id": 181824,
+   "cuisine": "Peranakan",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/indocafe-the-white-house"
+  },
+  {
+   "name": "J2 Famous Crispy Curry Puff",
+   "award": "bib",
+   "business_id": 239758,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/j2-famous-crispy-curry-puff"
+  },
+  {
+   "name": "Jalan Sultan Prawn Mee",
+   "award": "bib",
+   "business_id": 219057,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/jalan-sultan-prawn-mee"
+  },
+  {
+   "name": "Jason Penang Cuisine",
+   "award": "bib",
+   "business_id": 1123059,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/jason-penang-cuisine"
+  },
+  {
+   "name": "Ji De Lai Hainanese Chicken Rice",
+   "award": "bib",
+   "business_id": 740024,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/ji-de-lai-hainanese-chicken-rice"
+  },
+  {
+   "name": "Ji Ji Noodle House",
+   "award": "bib",
+   "business_id": 3085220,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/ji-ji-noodle-house"
+  },
+  {
+   "name": "Jia Xiang",
+   "award": "bib",
+   "business_id": 2960247,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/jia-xiang"
+  },
+  {
+   "name": "Jian Bo Tiong Bahru Shui Kueh",
+   "award": "bib",
+   "business_id": 2281752,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/jian-bo-tiong-bahru-shui-kueh"
+  },
+  {
+   "name": "Joo Siah Bak Koot Teh",
+   "award": "bib",
+   "business_id": 1309444,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/joo-siah-bak-koot-teh"
+  },
+  {
+   "name": "Jungle",
+   "award": "bib",
+   "business_id": 1169661,
+   "cuisine": "Thai",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/jungle"
+  },
+  {
+   "name": "Kelantan Kway Chap · Pig Organ Soup",
+   "award": "bib",
+   "business_id": 433974,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/kelantan-kway-chap-pig-organ-soup"
+  },
+  {
+   "name": "King of Laksa",
+   "award": "bib",
+   "business_id": 2312278,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/king-of-laksa"
+  },
+  {
+   "name": "Kitchenman Nasi Lemak",
+   "award": "bib",
+   "business_id": 1023761,
+   "cuisine": "Malaysian",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/kitchenman-nasi-lemak"
+  },
+  {
+   "name": "Koh Brother Pig's Organ Soup",
+   "award": "bib",
+   "business_id": 909695,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/koh-brother-pig-s-organ-soup"
+  },
+  {
+   "name": "Kok Sen",
+   "award": "bib",
+   "business_id": 141578,
+   "cuisine": "Singaporean",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/kok-sen"
+  },
+  {
+   "name": "Kotuwa",
+   "award": "bib",
+   "business_id": 161964,
+   "cuisine": "Sri Lankan",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/kotuwa"
+  },
+  {
+   "name": "Kwang Kee Teochew Fish Porridge",
+   "award": "bib",
+   "business_id": 771473,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/kwang-kee-teochew-fish-porridge"
+  },
+  {
+   "name": "Kwee Heng",
+   "award": "bib",
+   "business_id": 485203,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/kwee-heng"
+  },
+  {
+   "name": "Lagnaa",
+   "award": "bib",
+   "business_id": 62920,
+   "cuisine": "Indian",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/lagnaa"
+  },
+  {
+   "name": "Lai Heng Handmade Teochew Kueh",
+   "award": "bib",
+   "business_id": 1022009,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/lai-heng-handmade-teochew-kueh"
+  },
+  {
+   "name": "Lao Fu Zi Fried Kway Teow",
+   "award": "bib",
+   "business_id": 150058,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/lao-fu-zi-fried-kway-teow"
+  },
+  {
+   "name": "Lian He Ben Ji Claypot",
+   "award": "bib",
+   "business_id": 398737,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/lian-he-ben-ji-claypot"
+  },
+  {
+   "name": "Lixin Teochew Fishball Noodles",
+   "award": "bib",
+   "business_id": 320940,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/lixin-teochew-fishball-noodles"
+  },
+  {
+   "name": "MP Thai (Vision Exchange)",
+   "award": "bib",
+   "business_id": 838638,
+   "cuisine": "Thai",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/mp-thai"
+  },
+  {
+   "name": "Margaret Drive Sin Kee Chicken Rice",
+   "award": "bib",
+   "business_id": 692104,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/margaret-drive-sin-kee-chicken-rice"
+  },
+  {
+   "name": "Muthu's Curry",
+   "award": "bib",
+   "business_id": 183711,
+   "cuisine": "Indian",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/muthu-s-curry-little-india"
+  },
+  {
+   "name": "Na Na Curry",
+   "award": "bib",
+   "business_id": 1200441,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/na-na-curry"
+  },
+  {
+   "name": "Nam Sing Hokkien Fried Mee",
+   "award": "bib",
+   "business_id": 197219,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/nam-sing-hokkien-fried-mee"
+  },
+  {
+   "name": "New Lucky Claypot Rice",
+   "award": "bib",
+   "business_id": 562311,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/new-lucky-claypot-rice"
+  },
+  {
+   "name": "No.18 Zion Road Fried Kway Teow",
+   "award": "bib",
+   "business_id": 366792,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/no-18-zion-road-fried-kway-teow"
+  },
+  {
+   "name": "Outram Park Fried Kway Teow Mee",
+   "award": "bib",
+   "business_id": 214760,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/outram-park-fried-kway-teow"
+  },
+  {
+   "name": "Rajarani Thosai",
+   "award": "bib",
+   "business_id": 2006686,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/rajarani-thosai"
+  },
+  {
+   "name": "Ru Ji Kitchen",
+   "award": "bib",
+   "business_id": 216787,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/ru-ji-kitchen"
+  },
+  {
+   "name": "Selamat Datang Warong Pak Sapari",
+   "award": "bib",
+   "business_id": 603672,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/selamat-datang-warong-pak-sapari"
+  },
+  {
+   "name": "Seng Kee Black Chicken Herbal Soup",
+   "award": "bib",
+   "business_id": 933757,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/seng-kee-black-chicken-herbal-soup"
+  },
+  {
+   "name": "Sik Bao Sin",
+   "award": "bib",
+   "business_id": 320904,
+   "cuisine": "Singaporean",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/sik-bao-sin-desmond-s-creation"
+  },
+  {
+   "name": "Sin Heng Claypot Bak Koot Teh",
+   "award": "bib",
+   "business_id": 506237,
+   "cuisine": "Singaporean",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/sin-heng-claypot-bak-koot-teh"
+  },
+  {
+   "name": "Sin Huat Seafood Restaurant",
+   "award": "bib",
+   "business_id": 429737,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/sin-huat-eating-house"
+  },
+  {
+   "name": "Singapore Fried Hokkien Mee",
+   "award": "bib",
+   "business_id": 603676,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/singapore-fried-hokkien-mee"
+  },
+  {
+   "name": "Soh Kee Cooked Food",
+   "award": "bib",
+   "business_id": 1333170,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/soh-kee-cooked-food"
+  },
+  {
+   "name": "Song Fa Bak Kut Teh (New Bridge Road)",
+   "award": "bib",
+   "business_id": 172786,
+   "cuisine": "Singaporean",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/song-fa-bak-kut-teh-new-bridge-road"
+  },
+  {
+   "name": "Song Fish Soup",
+   "award": "bib",
+   "business_id": 1022015,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/song-fish-soup"
+  },
+  {
+   "name": "Song Kee Teochew Fish Porridge",
+   "award": "bib",
+   "business_id": 1633088,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/song-kee-teochew-fish-porridge"
+  },
+  {
+   "name": "Spinach Soup",
+   "award": "bib",
+   "business_id": 1157260,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/spinach-soup"
+  },
+  {
+   "name": "Tai Seng Fish Soup",
+   "award": "bib",
+   "business_id": 838487,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/tai-seng-fish-soup"
+  },
+  {
+   "name": "Tai Wah Pork Noodle",
+   "award": "bib",
+   "business_id": 579222,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/tai-wah-pork-noodle"
+  },
+  {
+   "name": "The Blue Ginger",
+   "award": "bib",
+   "business_id": 284580,
+   "cuisine": "Peranakan",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/the-blue-ginger-tanjong-pagar"
+  },
+  {
+   "name": "The Coconut Club (Beach Road)",
+   "award": "bib",
+   "business_id": 64898,
+   "cuisine": "Malaysian",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/the-coconut-club-1195654"
+  },
+  {
+   "name": "Tian Nan Xing Minced Pork Noodle",
+   "award": "bib",
+   "business_id": 2108435,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/tian-nan-xing-minced-pork-noodle"
+  },
+  {
+   "name": "Tian Tian Hainanese Chicken Rice",
+   "award": "bib",
+   "business_id": 104522,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/tian-tian-hainanese-chicken-rice"
+  },
+  {
+   "name": "Tiong Bahru Hainanese Boneless Chicken Rice",
+   "award": "bib",
+   "business_id": 219059,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/tiong-bahru-hainanese-boneless-chicken-rice"
+  },
+  {
+   "name": "To-Ricos Kway Chap",
+   "award": "bib",
+   "business_id": 433969,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/to-ricos-guo-shi"
+  },
+  {
+   "name": "True Blue Cuisine",
+   "award": "bib",
+   "business_id": 429777,
+   "cuisine": "Peranakan",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/true-blue-cuisine"
+  },
+  {
+   "name": "Un-Yang-Kor-Dai",
+   "award": "bib",
+   "business_id": 290407,
+   "cuisine": "Thai",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/un-yang-kor-dai"
+  },
+  {
+   "name": "Whole Earth",
+   "award": "bib",
+   "business_id": 202769,
+   "cuisine": "Vegetarian",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/whole-earth"
+  },
+  {
+   "name": "Wok Hei Hor Fun",
+   "award": "bib",
+   "business_id": 1618110,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/wok-hei-hor-fun"
+  },
+  {
+   "name": "Xiangyee",
+   "award": "bib",
+   "business_id": 2144138,
+   "cuisine": "Hunanese",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/xiangyee"
+  },
+  {
+   "name": "Xiu Ji Ikan Bilis Yong Tau Fu",
+   "award": "bib",
+   "business_id": 648298,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/xiu-ji-ikan-bilis-yong-tau-fu"
+  },
+  {
+   "name": "Yhingthai Palace",
+   "award": "bib",
+   "business_id": 906087,
+   "cuisine": "Thai",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/yhingthai-palace"
+  },
+  {
+   "name": "Yi Pin Wei Braised Duck．Kway Chap",
+   "award": "bib",
+   "business_id": 3354495,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/yi-pin-wei-braised-duck%EF%BC%8Ekway-chap"
+  },
+  {
+   "name": "Yong Chun Wan Ton Noodle",
+   "award": "bib",
+   "business_id": 603681,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/yong-chun-wan-ton-noodle"
+  },
+  {
+   "name": "Zai Shun Curry Fish Head",
+   "award": "bib",
+   "business_id": 737397,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/zai-shun-curry-fish-head"
+  },
+  {
+   "name": "Zhi Wei Xian Zion Road Big Prawn Noodle",
+   "award": "bib",
+   "business_id": 239778,
+   "cuisine": "Street Food",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/zhi-wei-xian-zion-road-big-prawn-noodle"
+  },
+  {
+   "name": "Zhup Zhup",
+   "award": "bib",
+   "business_id": 1949905,
+   "cuisine": "Noodles",
+   "url": "https://guide.michelin.com/sg/en/singapore-region/singapore/restaurant/zhup-zhup"
+  }
+ ]
+}

@@ -1,0 +1,17 @@
+{
+  "budget": 3,
+  "cuisines_like": [],
+  "cuisines_avoid": ["Fast Food", "Food Court"],
+  "max_outlets": 5,
+  "origin": { "label": "City Hall", "lat": 1.2903, "lng": 103.852 },
+  "max_km": 8,
+  "picks": 10,
+  "popular_picks": 4,
+  "min_beli_score": 7.5,
+  "min_ratings": 20,
+  "contexts": {
+    "weeknight": { "budget": 2, "max_km": 10 },
+    "date-night": { "budget": 4 },
+    "weekend-explore": { "max_km": 20 }
+  }
+}
