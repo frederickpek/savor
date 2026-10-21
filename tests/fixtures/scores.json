@@ -1,0 +1,34 @@
+{
+ "results": [
+  {
+   "user_id": "00000000-0000-4000-8000-0000000000f1",
+   "business_id": 4,
+   "value": 9.2,
+   "category": "RES"
+  },
+  {
+   "user_id": "00000000-0000-4000-8000-0000000000f1",
+   "business_id": 6,
+   "value": 8.1,
+   "category": "RES"
+  },
+  {
+   "user_id": "00000000-0000-4000-8000-0000000000f1",
+   "business_id": 8,
+   "value": 8.8,
+   "category": "RES"
+  },
+  {
+   "user_id": "00000000-0000-4000-8000-0000000000f1",
+   "business_id": 3,
+   "value": 7.0,
+   "category": "RES"
+  },
+  {
+   "user_id": "00000000-0000-4000-8000-000000000001",
+   "business_id": 1,
+   "value": 9.6,
+   "category": "RES"
+  }
+ ]
+}

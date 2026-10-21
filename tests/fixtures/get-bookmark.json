@@ -1,0 +1,61 @@
+{
+ "Restaurants": [
+  {
+   "id": 204,
+   "user": "00000000-0000-4000-8000-000000000001",
+   "business": {
+    "id": 4,
+    "name": "Sushi Kimura",
+    "city": "Singapore",
+    "price": 4,
+    "cuisines": [
+     "Japanese",
+     "Sushi"
+    ]
+   }
+  },
+  {
+   "id": 206,
+   "user": "00000000-0000-4000-8000-000000000001",
+   "business": {
+    "id": 6,
+    "name": "Lucali",
+    "city": "Singapore",
+    "price": 3,
+    "cuisines": [
+     "Italian",
+     "Pizza"
+    ]
+   }
+  },
+  {
+   "id": 214,
+   "user": "00000000-0000-4000-8000-000000000001",
+   "business": {
+    "id": 14,
+    "name": "Kok Sen",
+    "city": "Singapore",
+    "price": 2,
+    "cuisines": [
+     "Chinese",
+     "Zi Char"
+    ]
+   }
+  },
+  {
+   "id": 215,
+   "user": "00000000-0000-4000-8000-000000000001",
+   "business": {
+    "id": 15,
+    "name": "Candlenut",
+    "city": "Singapore",
+    "price": 3,
+    "cuisines": [
+     "Peranakan"
+    ],
+    "lat": 1.3048,
+    "lng": 103.81
+   }
+  }
+ ]
+}

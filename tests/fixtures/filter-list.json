@@ -1,0 +1,411 @@
+{
+ "results": [
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  14,
+  15,
+  16,
+  20,
+  21,
+  22,
+  23,
+  24,
+  25,
+  30,
+  31
+ ],
+ "count": 23,
+ "businesses": [
+  {
+   "id": 1,
+   "place_id": "ChIJfake1",
+   "name": "Burnt Ends",
+   "status": "OPERATIONAL",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Dempsey",
+   "lat": 1.3045,
+   "lng": 103.809,
+   "price": 4,
+   "cuisines": [
+    "Barbecue",
+    "Australian"
+   ]
+  },
+  {
+   "id": 2,
+   "place_id": "ChIJfake2",
+   "name": "Hawker Chan",
+   "status": "OPERATIONAL",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Chinatown",
+   "lat": 1.2823,
+   "lng": 103.8448,
+   "price": 1,
+   "cuisines": [
+    "Chinese",
+    "Hawker"
+   ]
+  },
+  {
+   "id": 3,
+   "place_id": "ChIJfake3",
+   "name": "Jaan",
+   "status": "OPERATIONAL",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "City Hall",
+   "lat": 1.2932,
+   "lng": 103.8531,
+   "price": 4,
+   "cuisines": [
+    "French"
+   ]
+  },
+  {
+   "id": 4,
+   "place_id": "ChIJfake4",
+   "name": "Sushi Kimura",
+   "status": "OPERATIONAL",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Orchard",
+   "lat": 1.305,
+   "lng": 103.832,
+   "price": 4,
+   "cuisines": [
+    "Japanese",
+    "Sushi"
+   ]
+  },
+  {
+   "id": 5,
+   "place_id": "ChIJfake5",
+   "name": "Jai Thai",
+   "status": "OPERATIONAL",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Kallang",
+   "lat": 1.311,
+   "lng": 103.865,
+   "price": 2,
+   "cuisines": [
+    "Thai"
+   ]
+  },
+  {
+   "id": 6,
+   "place_id": "ChIJfake6",
+   "name": "Lucali",
+   "status": "OPERATIONAL",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Tanjong Pagar",
+   "lat": 1.28,
+   "lng": 103.846,
+   "price": 3,
+   "cuisines": [
+    "Italian",
+    "Pizza"
+   ]
+  },
+  {
+   "id": 7,
+   "place_id": "ChIJfake7",
+   "name": "Odette",
+   "status": "OPERATIONAL",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "City Hall",
+   "lat": 1.29,
+   "lng": 103.851,
+   "price": 4,
+   "cuisines": [
+    "French"
+   ]
+  },
+  {
+   "id": 8,
+   "place_id": "ChIJfake8",
+   "name": "Cloudstreet",
+   "status": "OPERATIONAL",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Chinatown",
+   "lat": 1.281,
+   "lng": 103.844,
+   "price": 4,
+   "cuisines": [
+    "Modern Australian"
+   ]
+  },
+  {
+   "id": 9,
+   "place_id": "ChIJfake9",
+   "name": "Tsuta Ramen",
+   "status": "OPERATIONAL",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Orchard",
+   "lat": 1.301,
+   "lng": 103.838,
+   "price": 2,
+   "cuisines": [
+    "Japanese",
+    "Ramen"
+   ]
+  },
+  {
+   "id": 10,
+   "place_id": "ChIJfake10",
+   "name": "Bangkok Jam",
+   "status": "OPERATIONAL",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Dhoby Ghaut",
+   "lat": 1.3,
+   "lng": 103.845,
+   "price": 2,
+   "cuisines": [
+    "Thai"
+   ]
+  },
+  {
+   "id": 11,
+   "place_id": "ChIJfake11",
+   "name": "Ippudo",
+   "status": "OPERATIONAL",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Orchard",
+   "lat": 1.304,
+   "lng": 103.831,
+   "price": 2,
+   "cuisines": [
+    "Japanese",
+    "Ramen"
+   ]
+  },
+  {
+   "id": 12,
+   "place_id": "ChIJfake12",
+   "name": "Lolla",
+   "status": "OPERATIONAL",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Ann Siang",
+   "lat": 1.2805,
+   "lng": 103.847,
+   "price": 3,
+   "cuisines": [
+    "Mediterranean"
+   ]
+  },
+  {
+   "id": 14,
+   "place_id": "ChIJfake14",
+   "name": "Kok Sen",
+   "status": "OPERATIONAL",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Chinatown",
+   "lat": null,
+   "lng": null,
+   "price": 2,
+   "cuisines": [
+    "Chinese",
+    "Zi Char"
+   ]
+  },
+  {
+   "id": 15,
+   "place_id": "ChIJfake15",
+   "name": "Candlenut",
+   "status": "OPERATIONAL",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Dempsey",
+   "lat": 1.3048,
+   "lng": 103.81,
+   "price": 3,
+   "cuisines": [
+    "Peranakan"
+   ],
+   "businessdistinction_set": [
+    {
+     "name": "Date Night"
+    }
+   ]
+  },
+  {
+   "id": 16,
+   "place_id": "ChIJfake16",
+   "name": "Nouri",
+   "status": "OPERATIONAL",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Tanjong Pagar",
+   "lat": 1.2795,
+   "lng": 103.8455,
+   "price": 4,
+   "cuisines": [
+    "Modern"
+   ]
+  },
+  {
+   "id": 20,
+   "name": "Ya Kun Kaya Toast @ Bugis",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Bugis",
+   "lat": 1.3,
+   "lng": 103.85,
+   "price": 1,
+   "cuisines": [
+    "Singaporean",
+    "Breakfast"
+   ],
+   "status": "OPERATIONAL"
+  },
+  {
+   "id": 21,
+   "name": "Ya Kun Kaya Toast @ Orchard",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Orchard",
+   "lat": 1.305,
+   "lng": 103.85,
+   "price": 1,
+   "cuisines": [
+    "Singaporean",
+    "Breakfast"
+   ],
+   "status": "OPERATIONAL"
+  },
+  {
+   "id": 22,
+   "name": "Ya Kun Kaya Toast @ Tampines",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Tampines",
+   "lat": 1.31,
+   "lng": 103.85,
+   "price": 1,
+   "cuisines": [
+    "Singaporean",
+    "Breakfast"
+   ],
+   "status": "OPERATIONAL"
+  },
+  {
+   "id": 23,
+   "name": "Ya Kun Kaya Toast @ Jurong East",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Jurong East",
+   "lat": 1.315,
+   "lng": 103.85,
+   "price": 1,
+   "cuisines": [
+    "Singaporean",
+    "Breakfast"
+   ],
+   "status": "OPERATIONAL"
+  },
+  {
+   "id": 24,
+   "name": "Ya Kun Kaya Toast @ Bishan",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Bishan",
+   "lat": 1.32,
+   "lng": 103.85,
+   "price": 1,
+   "cuisines": [
+    "Singaporean",
+    "Breakfast"
+   ],
+   "status": "OPERATIONAL"
+  },
+  {
+   "id": 25,
+   "name": "Ya Kun Kaya Toast @ Novena",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Novena",
+   "lat": 1.325,
+   "lng": 103.85,
+   "price": 1,
+   "cuisines": [
+    "Singaporean",
+    "Breakfast"
+   ],
+   "status": "OPERATIONAL"
+  },
+  {
+   "id": 30,
+   "name": "McDonald's Raffles Place",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Raffles Place",
+   "lat": 1.284,
+   "lng": 103.851,
+   "price": 1,
+   "cuisines": [
+    "Fast Food",
+    "Burgers"
+   ],
+   "status": "OPERATIONAL"
+  },
+  {
+   "id": 31,
+   "name": "Gone Bistro",
+   "city": "Singapore",
+   "country": "Singapore",
+   "neighborhood": "Bugis",
+   "lat": 1.3,
+   "lng": 103.856,
+   "price": 3,
+   "cuisines": [
+    "Japanese"
+   ],
+   "status": "CLOSED_PERMANENTLY"
+  }
+ ],
+ "business_hash": {
+  "1": true,
+  "2": true,
+  "3": true,
+  "4": true,
+  "5": true,
+  "6": true,
+  "7": true,
+  "8": true,
+  "9": true,
+  "10": true,
+  "11": true,
+  "12": true,
+  "14": true,
+  "15": true,
+  "16": true,
+  "20": true,
+  "21": true,
+  "22": true,
+  "23": true,
+  "24": true,
+  "25": true,
+  "30": true,
+  "31": true
+ }
+}

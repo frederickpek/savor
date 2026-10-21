@@ -1,0 +1,123 @@
+{
+ "results": [
+  {
+   "id": 100,
+   "user": "00000000-0000-4000-8000-000000000001",
+   "business": {
+    "id": 1,
+    "name": "Burnt Ends",
+    "city": "Singapore",
+    "price": 4,
+    "cuisines": [
+     "Barbecue",
+     "Australian"
+    ],
+    "lat": 1.3045,
+    "lng": 103.809
+   },
+   "score": 9.6,
+   "value": 2.5
+  },
+  {
+   "id": 101,
+   "user": "00000000-0000-4000-8000-000000000001",
+   "business": {
+    "id": 2,
+    "name": "Hawker Chan",
+    "city": "Singapore",
+    "price": 1,
+    "cuisines": [
+     "Chinese",
+     "Hawker"
+    ]
+   },
+   "score": 6.1,
+   "value": 2.5
+  },
+  {
+   "id": 102,
+   "user": "00000000-0000-4000-8000-000000000001",
+   "business": {
+    "id": 5,
+    "name": "Jai Thai",
+    "city": "Singapore",
+    "price": 2,
+    "cuisines": [
+     "Thai"
+    ],
+    "lat": 1.311,
+    "lng": 103.865
+   },
+   "score": 8.9,
+   "value": 2.5
+  },
+  {
+   "id": 103,
+   "user": "00000000-0000-4000-8000-000000000001",
+   "business": {
+    "id": 9,
+    "name": "Tsuta Ramen",
+    "city": "Singapore",
+    "price": 2,
+    "cuisines": [
+     "Japanese",
+     "Ramen"
+    ],
+    "lat": 1.301,
+    "lng": 103.838
+   },
+   "score": 8.4,
+   "value": 2.5
+  },
+  {
+   "id": 104,
+   "user": "00000000-0000-4000-8000-000000000001",
+   "business": {
+    "id": 11,
+    "name": "Ippudo",
+    "city": "Singapore",
+    "price": 2,
+    "cuisines": [
+     "Japanese",
+     "Ramen"
+    ],
+    "lat": 1.304,
+    "lng": 103.831
+   },
+   "score": 7.9,
+   "value": 2.5
+  },
+  {
+   "id": 105,
+   "user": "00000000-0000-4000-8000-000000000001",
+   "business": {
+    "id": 12,
+    "name": "Lolla",
+    "city": "Singapore",
+    "price": 3,
+    "cuisines": [
+     "Mediterranean"
+    ]
+   },
+   "score": 5.5,
+   "value": 2.5
+  },
+  {
+   "id": 106,
+   "user": "00000000-0000-4000-8000-000000000001",
+   "business": {
+    "id": 13,
+    "name": "Joe's Pizza",
+    "city": "New York",
+    "price": 1,
+    "cuisines": [
+     "Pizza"
+    ],
+    "lat": 40.7306,
+    "lng": -74.0021
+   },
+   "score": 8.0,
+   "value": 2.5
+  }
+ ]
+}

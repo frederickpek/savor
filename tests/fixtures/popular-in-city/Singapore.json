@@ -1,0 +1,36 @@
+{
+ "results": [
+  {
+   "id": 7,
+   "name": "Odette",
+   "city": "Singapore",
+   "price": 4,
+   "cuisines": [
+    "French"
+   ],
+   "lat": 1.29,
+   "lng": 103.851
+  },
+  {
+   "id": 3,
+   "name": "Jaan",
+   "city": "Singapore",
+   "price": 4,
+   "cuisines": [
+    "French"
+   ],
+   "lat": 1.2932,
+   "lng": 103.8531
+  },
+  {
+   "id": 2,
+   "name": "Hawker Chan",
+   "city": "Singapore",
+   "price": 1,
+   "cuisines": [
+    "Chinese",
+    "Hawker"
+   ]
+  }
+ ]
+}
