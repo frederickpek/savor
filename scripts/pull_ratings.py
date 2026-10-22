@@ -3,8 +3,9 @@
     .venv/bin/python scripts/pull_ratings.py [--out data] [--interval 1.25] [--batch 10] [--quiet]
 
 Same order as the daily job: Beli's top 200, this week's picks, your lists, catalogue places with
-a price and cuisine, then the rest. Each place is two requests (rating count, then the Beli
-average when anyone has rated it), at least `--interval` seconds apart. A 429 backs off up to 3
+a price and cuisine, then the rest. Each place is one request (the score histogram, which gives
+the rating count and average), or two when Beli hides it below ~5 ratings and only the count is
+fetched, at least `--interval` seconds apart. A 429 backs off up to 3
 times (1, 3, 10 minutes); if Beli is still refusing, it waits 30 minutes and starts the next round,
 so it never gives up on its own. Every `--batch` places are committed to savor.db, so Ctrl-C or
 kill loses at most one batch, and the published JSON (places.json and this week's picks) is
@@ -105,7 +106,7 @@ def main() -> None:
     if not args.quiet:
         beli.log = log_request
 
-    say("building the queue (no data yet first: top 200 → MICHELIN → this week's picks → your lists → priced → rest; then stalest)")
+    say("building the queue (missing histograms first, then no data yet: top 200 → MICHELIN → this week's picks → your lists → priced → rest; then stalest)")
     todo = ingest.score_queue(con, today)
     if args.michelin:
         from pipeline.recommend import michelin
@@ -117,8 +118,10 @@ def main() -> None:
     ranks = dict(con.execute(
         "SELECT business_id, position + 1 FROM list_members WHERE list_type = 'popular'").fetchall())
     total = len(todo)
+    backfill = sum(r["beli_score"] is not None and r["histogram"] is None for r in todo)
     fresh = sum(r["count_fetched_on"] is None for r in todo)
-    say(f"{total:,} places queued: {fresh:,} with no data yet, then {total - fresh:,} already fetched (stalest first)")
+    say(f"{total:,} places queued: {backfill:,} to add a histogram to, then {fresh:,} with no data yet, "
+        f"then {total - backfill - fresh:,} to refresh (stalest first)")
     say(f"{args.interval:g}s between requests · saving every {args.batch} places · Ctrl-C to stop")
 
     done = scored = batch_scored = 0
@@ -127,7 +130,10 @@ def main() -> None:
     while i < total and not stop:
         bid = todo[i]["business_id"]
         tag = f" (Top 200 #{ranks[bid]})" if bid in ranks else ""
-        refresh = "" if todo[i]["count_fetched_on"] is None else f"  (refresh, last {todo[i]['count_fetched_on']})"
+        r = todo[i]
+        refresh = ("" if r["count_fetched_on"] is None
+                   else f"  (adding histogram, last {r['count_fetched_on']})" if r["histogram"] is None and r["beli_score"] is not None
+                   else f"  (refresh, last {r['count_fetched_on']})")
         say(f"[{i + 1:,}/{total:,}] {names.get(bid, bid)}{tag}  id={bid}{refresh}")
         fields = None
         for attempt in range(len(BACKOFF) + 1):
@@ -159,9 +165,11 @@ def main() -> None:
                 batch_scored += 1
                 say(f"  ✓ Beli {fields['beli_score']:.2f} from {fields.get('review_count', 0):,} ratings")
             elif fields.get("review_count") == 0:
-                say("  ✓ nobody has rated it yet (no score to fetch)")
+                say("  ✓ nobody has rated it yet")
+            elif fields.get("review_count") is not None:
+                say(f"  ✓ {fields['review_count']} ratings, too few for Beli to show a score")
             else:
-                say("  ✓ no score available")
+                say("  ✓ no data available")
         done += 1
         i += 1
 

@@ -3,7 +3,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import type { FeatureCollection } from 'geojson'
 import { useEffect, useRef, useState } from 'react'
-import { type Pick, type Place, mapsUrl, price } from '../lib/api'
+import { type Pick, type Place, mapsUrl, price, ratingsLabel } from '../lib/api'
 import { googleStyle } from '../lib/mapStyle'
 import { scoreTone } from './ScoreRing'
 
@@ -37,7 +37,7 @@ const STAR = '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)
 
 function popupHtml(p: Place) {
-  const count = p.review_count ? `${p.review_count.toLocaleString()} ratings` : null
+  const count = ratingsLabel(p)
   const stars = typeof p.michelin === 'number' ? STAR.repeat(p.michelin) : ''
   const award = p.michelin === 'bib' ? 'MICHELIN Bib Gourmand' : p.michelin ? `MICHELIN ${p.michelin} star${p.michelin > 1 ? 's' : ''}` : null
   const meta = [price(p.price), p.cuisines.slice(0, 2).join(', '), p.neighborhood, count].filter(Boolean).map((s) => esc(String(s))).join(' · ')

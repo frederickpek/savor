@@ -171,7 +171,7 @@ def test_scores_stop_for_the_day_on_rate_limit(tmp_path, monkeypatch):
             self.calls += 1
             if self.calls > 2:
                 raise RateLimited("429")
-            return 0
+            return {"config": {"buckets": [{"count": 1}] * 20}}
     summary = {"sources": {}, "failures": {}, "backlog": {}}
     ingest.enrich_scores(Limited(), con, "2026-10-14", summary)
     assert summary["sources"]["review_count"] == 2
@@ -283,9 +283,43 @@ def test_score_queue_does_unfetched_first_then_stalest(tmp_path):
     for bid in (1, 2, 3, 4):
         db.upsert_business(con, {"business_id": bid, "name": f"P{bid}"}, "2026-10-01")
     con.execute("UPDATE businesses SET in_sg = 1")
-    db.set_fields(con, 1, count_fetched_on="2026-10-20")
-    db.set_fields(con, 2, count_fetched_on="2026-09-01")
+    db.set_fields(con, 1, count_fetched_on="2026-10-20", histogram="[3]")
+    db.set_fields(con, 2, count_fetched_on="2026-09-01", histogram="[]")
     db.replace_list(con, "popular", "2026-10-01", [(4, 0, None)])
     order = [r["business_id"] for r in ingest.score_queue(con, "2026-10-22")]
     # Never fetched (popular #1 ahead of the rest), then oldest fetch first; no expiry window.
     assert order == [4, 3, 2, 1]
+
+
+def test_score_from_histogram_with_count_fallback():
+    from pipeline import ingest
+
+    counts = [0] * 15 + [10, 20, 30, 30, 10]  # 100 ratings, 7.5 to 10
+    class Fake:
+        def __init__(self, hist): self.hist, self.paths = hist, []
+        def get(self, path, params=None, patient=True):
+            self.paths.append(path.split("/")[2])
+            return {"config": {"buckets": [{"count": c} for c in self.hist]}} if "histogram" in path else {"count": 4}
+    shown = Fake(counts)
+    f = ingest.fetch_score(shown, 1, "2026-10-22")
+    assert shown.paths == ["business-histogram-data"]  # one call
+    assert f["review_count"] == 100 and f["beli_score"] == 8.8 and json.loads(f["histogram"]) == counts
+    hidden = Fake([])  # Beli hides it below ~5 ratings
+    f = ingest.fetch_score(hidden, 1, "2026-10-22")
+    assert hidden.paths == ["business-histogram-data", "business-count-rated"]
+    assert f == {"count_fetched_on": "2026-10-22", "histogram": "[]", "review_count": 4}
+
+
+def test_score_queue_backfills_missing_histograms_first(tmp_path):
+    from pipeline import ingest
+
+    con = db.connect(tmp_path / "t.db")
+    for bid in (1, 2, 3):
+        db.upsert_business(con, {"business_id": bid, "name": f"P{bid}"}, "2026-10-01")
+    con.execute("UPDATE businesses SET in_sg = 1")
+    db.set_fields(con, 1, count_fetched_on="2026-10-01", histogram="[]")  # checked: Beli hides it
+    db.set_fields(con, 2, count_fetched_on="2026-10-20", beli_score=8.0)  # scored before histograms
+    db.upsert_business(con, {"business_id": 4, "name": "P4"}, "2026-10-01")
+    db.set_fields(con, 4, count_fetched_on="2026-09-01", review_count=3, in_sg=1)  # unscored: no backfill
+    order = [r["business_id"] for r in ingest.score_queue(con, "2026-10-22")]
+    assert order == [2, 3, 4, 1]

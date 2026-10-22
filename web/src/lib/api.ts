@@ -65,5 +65,25 @@ export const api = {
 }
 
 export const price = (p: number | null) => (p ? '$'.repeat(p) : '—')
+// Where a place's Beli rating stands. review_count is null until the ratings pull reaches it, 0 when
+// nobody has rated it, and Beli withholds the score until a place has about 5 ratings.
+type Rated = { beli_score: number | null; review_count: number | null }
+export type RatingState = 'scored' | 'pending' | 'unrated' | 'few'
+export const ratingState = (p: Rated): RatingState =>
+  p.beli_score != null ? 'scored' : p.review_count == null ? 'pending' : p.review_count === 0 ? 'unrated' : 'few'
+export const ratingsLabel = (p: Rated) => {
+  const n = p.review_count
+  switch (ratingState(p)) {
+    case 'pending': return 'Not checked yet'
+    case 'unrated': return 'No ratings yet'
+    case 'few': return `${n} rating${n === 1 ? '' : 's'}, too few for a score`
+    default: return n ? `${n.toLocaleString()} ratings` : null
+  }
+}
+export const RATING_TITLES: Record<Exclude<RatingState, 'scored'>, string> = {
+  pending: "Not checked yet: the ratings pull hasn't reached this place",
+  unrated: 'No one has rated this on Beli yet',
+  few: 'Beli shows a score once about 5 people have rated it',
+}
 export const mapsUrl = (p: Place) =>
   `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${p.name} ${p.address ?? 'Singapore'}`)}`

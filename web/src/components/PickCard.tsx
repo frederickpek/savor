@@ -1,6 +1,6 @@
 import { Bookmark, Check, Globe, Navigation } from 'lucide-react'
 import { useEffect, useRef } from 'react'
-import { type Pick, mapsUrl, price } from '../lib/api'
+import { type Pick, mapsUrl, price, ratingsLabel } from '../lib/api'
 import Badges from './Badges'
 import ScoreRing from './ScoreRing'
 
@@ -46,7 +46,7 @@ export default function PickCard({ pick: p, rank, selected, onSelect }: Props) {
             )}
           </div>
           <p className="mt-0.5 truncate text-sm text-muted">
-            {[price(p.price), p.cuisines.slice(0, 2).join(', '), p.neighborhood, p.km != null && `${p.km} km`, p.review_count && `${p.review_count.toLocaleString()} ratings`]
+            {[price(p.price), p.cuisines.slice(0, 2).join(', '), p.neighborhood, p.km != null && `${p.km} km`, ratingsLabel(p)]
               .filter(Boolean)
               .join(' · ')}
           </p>

@@ -141,6 +141,23 @@ def from_search(pred: dict) -> dict | None:
     }
 
 
+def histogram(payload: Any) -> list[int] | None:
+    """Rating counts from business-histogram-data: 20 buckets, 0.5 points wide, 0 to 10. None
+    when Beli hides it (fewer than ~5 ratings) or the shape is unexpected."""
+    buckets = payload.get("config", {}).get("buckets") if isinstance(payload, dict) else None
+    if not isinstance(buckets, list) or not buckets:
+        return None
+    counts = [to_int(b.get("count")) or 0 for b in buckets if isinstance(b, dict)]
+    return counts if len(counts) == len(buckets) and sum(counts) > 0 else None
+
+
+def score_from_histogram(counts: list[int]) -> float:
+    """Average score, taking each rating at its bucket's midpoint. Within a few hundredths of
+    Beli's own AVGBUSINESSSCORE on every place checked."""
+    width = 10 / len(counts)
+    return sum(n * (i + 0.5) * width for i, n in enumerate(counts)) / sum(counts)
+
+
 def score_from_sparse(payload: Any, business_id: int) -> float | None:
     """AVGBUSINESSSCORE (EAV field 206) out of a databusinessfloat-sparse response."""
     for r in records(payload):

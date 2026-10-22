@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS businesses (
     cuisines          TEXT,             -- JSON array
     beli_score        REAL,             -- 0..10, Beli-wide average when available
     review_count      INTEGER,
+    histogram         TEXT,             -- JSON: Beli's 20 rating counts, 0.5-point buckets from 0 to 10;
+                                        -- '[]' when Beli hides it (< ~5 ratings), NULL if never fetched
     website           TEXT,
     status            TEXT,
     in_sg             INTEGER,          -- 1 inside Singapore, 0 outside, NULL unknown
@@ -84,8 +86,11 @@ def connect(path: Path) -> sqlite3.Connection:
     con = sqlite3.connect(path)
     con.row_factory = sqlite3.Row
     con.executescript(SCHEMA)
-    if "tags" in {r[1] for r in con.execute("PRAGMA table_info(businesses)")}:
+    cols = {r[1] for r in con.execute("PRAGMA table_info(businesses)")}
+    if "tags" in cols:
         con.execute("ALTER TABLE businesses DROP COLUMN tags")  # vibes were removed
+    if "histogram" not in cols:
+        con.execute("ALTER TABLE businesses ADD COLUMN histogram TEXT")
     if "context" not in {r[1] for r in con.execute("PRAGMA table_info(picks)")}:
         # Older DBs only kept the default context's picks; rebuild with a context column.
         con.executescript("""

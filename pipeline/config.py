@@ -17,7 +17,7 @@ SNAPSHOT_RETENTION_DAYS = 7
 # Past picks, for the no-repeat cooldown and the published weekly files.
 PICKS_RETENTION_DAYS = 365
 
-# Beli score and rating count only come one place at a time (two calls each, no bulk form,
+# Beli score and rating count only come one place at a time (one call each, two below ~5 ratings; no bulk form,
 # login required), so each run (every 6 hours) fetches a small batch. At 1.25s per call,
 # 150 places is ~7 minutes; a 429 ends the step for that run. Places with no data yet go first
 # (top 200, MICHELIN, this week's picks, your lists, priced places, the rest); once all have data,

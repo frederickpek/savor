@@ -10,7 +10,7 @@ stars, Bib Gourmand, every place with price and cuisine filters, and a statistic
 | | |
 |---|---|
 | **Sources** | Beli via [ProjectBarks/beli-api](https://github.com/ProjectBarks/beli-api) (pinned in `pipeline/requirements.txt`). One `filter-list` call returns the whole Singapore catalogue; Beli's popular-in-Singapore 200, your ranked list and your bookmarks are fetched alongside. |
-| **Ratings** | Beli's score and rating count need one place at a time (two calls each), so each run fetches 150. Places with no data go first (Top 200, MICHELIN, this week's picks, your lists, priced places, the rest); once all have data, the 150 stalest are refreshed. |
+| **Ratings** | Beli's score and rating count come one place at a time (one call, the score histogram; two below ~5 ratings, where Beli hides it), so each run fetches 150. Places with no data go first (Top 200, MICHELIN, this week's picks, your lists, priced places, the rest); once all have data, the 150 stalest are refreshed. |
 | **MICHELIN** | `pipeline/data/michelin.json` is a hand-kept snapshot of the MICHELIN Guide Singapore 2026 (3 three-star, 9 two-star, 33 one-star, 97 Bib Gourmand), each linked to its Beli id. Refresh it when the next guide is out. |
 | **Picks** | Every open Singapore place is scored on fit (cuisine, price), Beli quality, novelty, distance and friends. Each context's 10 = 4 from the Top 200 + 6 discoveries (Beli 7.5+ from 20+ ratings). A place picked anywhere sits out all contexts for 6 weeks. |
 | **Filters** | `max_outlets` (5) drops chains, `cuisines_avoid` drops Fast Food and Food Court, and closed places and anything outside Singapore are skipped. |

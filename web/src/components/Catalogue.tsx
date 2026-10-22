@@ -1,6 +1,6 @@
 import { ArrowLeft, Check, ChevronDown, Search, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { type Place, price } from '../lib/api'
+import { type Place, price, ratingsLabel } from '../lib/api'
 import Badges from './Badges'
 import PanelHeader from './PanelHeader'
 import ScoreRing from './ScoreRing'
@@ -179,7 +179,7 @@ export default function Catalogue({ mode, places: all, filters: f, onFilters, se
                     </div>
                     <div className="truncate text-[13px] text-muted">
                       {[price(p.price), p.cuisines.slice(0, 2).join(', '), p.neighborhood,
-                        p.review_count ? `${p.review_count.toLocaleString()} ratings` : null].filter(Boolean).join(' · ')}
+                        ratingsLabel(p)].filter(Boolean).join(' · ')}
                     </div>
                   </div>
                   <ScoreRing score={p.beli_score} count={p.review_count} size={34} />

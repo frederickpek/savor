@@ -2,7 +2,7 @@
 
 Fixture files are named after the endpoint: `/api/get-ranking/` -> `get-ranking.json`,
 `/api/business-count-rated/7/` -> `business-count-rated/7.json`,
-`/api/databusinessfloat-sparse/?business=7` -> `databusinessfloat-sparse/7.json`.
+`/api/business-histogram-data/7/` -> `business-histogram-data/7.json`.
 A missing fixture behaves like a 404.
 """
 
@@ -31,6 +31,8 @@ class FakeBeli:
         parts = [p for p in path.split("/") if p and p != "api" and p != USER]
         if parts[0] == "databusinessfloat-sparse" and params:
             return self._load(f"databusinessfloat-sparse/{params['business']}")
+        if parts[0] == "business-histogram-data":
+            return self._load(f"business-histogram-data/{parts[1]}")
         if parts[0] == "business-count-rated":
             return self._load(f"business-count-rated/{parts[1]}")
         if parts[0] == "popular-in-city":

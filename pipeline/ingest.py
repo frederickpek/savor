@@ -120,16 +120,20 @@ def score_queue(con, today: str) -> list[dict]:
     """Singapore places to fetch ratings for, in order. Never-fetched places always come first, by
     usefulness: Beli's top 200 (in Beli's order), MICHELIN-listed places, this week's picks, your
     lists, catalogue places with a price and cuisine, then the rest. Once every place has been
-    fetched, the queue is everything ordered stalest first, so each run refreshes the oldest data."""
+    fetched, the queue is everything ordered stalest first, so each run refreshes the oldest data.
+    Ahead of all of that: scored places fetched before histograms were stored (histogram IS NULL),
+    so they gain their distribution. Unscored ones would only get Beli's empty histogram back, so
+    they wait for their normal refresh; '[]' marks a place checked whose histogram Beli hides."""
     from .recommend import michelin
 
     con.execute("CREATE TEMP TABLE IF NOT EXISTS guide (business_id INTEGER PRIMARY KEY)")
     con.execute("DELETE FROM guide")
     con.executemany("INSERT OR IGNORE INTO guide VALUES (?)", [(b,) for b in michelin()])
     return [dict(r) for r in con.execute(
-        """SELECT b.business_id, b.beli_score, b.count_fetched_on FROM businesses b
+        """SELECT b.business_id, b.beli_score, b.count_fetched_on, b.histogram FROM businesses b
            WHERE b.in_sg = 1 AND COALESCE(b.status, '') NOT IN ('CLOSED', 'PERMANENTLY_CLOSED', 'CLOSED_PERMANENTLY')
            ORDER BY
+             (b.beli_score IS NOT NULL AND b.histogram IS NULL) DESC,
              b.count_fetched_on IS NOT NULL,
              b.count_fetched_on,
              COALESCE((SELECT m.position FROM list_members m WHERE m.business_id = b.business_id
@@ -144,26 +148,31 @@ def score_queue(con, today: str) -> list[dict]:
 
 
 def fetch_score(beli: Beli, bid: int, today: str) -> dict:
-    """Fields for one place: its rating count, and its Beli average when anyone has rated it.
-    Raises RateLimited on a 429 so the caller decides how to back off."""
+    """Fields for one place, usually in one call: the score histogram gives the rating count, the
+    distribution and (from the bucket midpoints) the average. Beli hides the histogram below ~5
+    ratings, and then only the rating count is fetched. Raises RateLimited on a 429 so the caller
+    decides how to back off."""
+    fields: dict = {"count_fetched_on": today}
+    try:
+        counts = normalize.histogram(beli.get(f"/api/business-histogram-data/{bid}/", patient=False))
+    except PermanentError:
+        counts = None
+    if counts:
+        return {**fields, "review_count": sum(counts), "histogram": json.dumps(counts, separators=(",", ":")),
+                "beli_score": round(normalize.score_from_histogram(counts), 2)}
+    fields["histogram"] = "[]"  # checked, and Beli hides it; NULL means never checked
     try:
         n = normalize.to_int(beli.get(f"/api/business-count-rated/{bid}/", patient=False))
-        fields = {"count_fetched_on": today}
-        if n is not None:
-            fields["review_count"] = n
-        if n:  # nobody has rated it: there is no average to ask for
-            payload = beli.get("/api/databusinessfloat-sparse/",
-                               {"business": bid, "field__name": "AVGBUSINESSSCORE"}, patient=False)
-            if (s := normalize.score_from_sparse(payload, bid)) is not None:
-                fields["beli_score"] = round(s, 2)
-        return fields
     except PermanentError:
-        return {"count_fetched_on": today}  # gone or malformed: don't retry it every day
+        return fields  # gone or malformed: don't retry it every day
+    if n is not None:
+        fields["review_count"] = n
+    return fields
 
 
 def enrich_scores(beli: Beli, con, today: str, summary: dict, budget: int = MAX_SCORE_PLACES) -> None:
-    """Beli-wide average score (EAV field AVGBUSINESSSCORE) and how many people rated it, one place
-    at a time: neither has a bulk form. A 429 gets one cool-down, then the step ends for the day
+    """Beli-wide average score and how many people rated it, one place at a time (no bulk form;
+    see fetch_score). A 429 gets one cool-down, then the step ends for the day
     and the queue carries over; a slow drip beats a run that spends its time being refused."""
     todo = score_queue(con, today)
     ok = scored = 0

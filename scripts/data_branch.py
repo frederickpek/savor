@@ -33,7 +33,7 @@ from pipeline.run import SGT  # noqa: E402
 from pull_ratings import publish  # noqa: E402
 
 BRANCH = "data"
-RATING_FIELDS = ("review_count", "beli_score", "count_fetched_on")
+RATING_FIELDS = ("review_count", "beli_score", "histogram", "count_fetched_on")
 
 
 def git(*args: str, **kw) -> str:
@@ -91,6 +91,8 @@ def merge(base: Path, local: Path) -> int:
     """Copy into `base` every rating that `local` fetched more recently. Returns how many places."""
     if not local.exists():
         return 0
+    for p in (base, local):  # bring both schemas up to date (e.g. the histogram column) first
+        db.connect(p).close()
     con = sqlite3.connect(base)
     try:
         con.execute("ATTACH ? AS l", (str(local),))
