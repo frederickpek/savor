@@ -55,10 +55,21 @@ body { @apply bg-bg font-sans text-ink antialiased; font-feature-settings: 'tnum
 }
 .maplibregl-ctrl-group button { width: 40px !important; height: 40px !important; }
 .maplibregl-ctrl-group button + button { border-top: 1px solid #eceff0 !important; }
-.maplibregl-ctrl-bottom-right { margin: 0 6px 18px 0; }
+/* Bottom-right reads left to right: distance gauge, zoom buttons; attribution chip below them. */
+.maplibregl-ctrl-bottom-right {
+  margin: 0 6px 18px 0; display: flex; flex-wrap: wrap-reverse; justify-content: flex-end;
+  align-items: flex-start; column-gap: 8px; max-width: 280px;
+}
+.maplibregl-ctrl-bottom-right > .maplibregl-ctrl { margin: 0 !important; float: none !important; }
+/* The chip wraps onto its own row under the gauge and buttons (wrap-reverse puts order 0 last). */
+.maplibregl-ctrl-bottom-right > .maplibregl-ctrl-attrib { order: 0; margin-top: 6px !important; }
+.maplibregl-ctrl-bottom-right::after { content: ''; order: 0; flex-basis: 100%; height: 0; } /* row break */
+/* MapLibre sets the gauge's width inline to the distance it measures; flex mustn't squash it. */
+.maplibregl-ctrl-bottom-right > .maplibregl-ctrl-scale { order: 1; flex-shrink: 0; box-sizing: content-box; white-space: nowrap; align-self: flex-start; } /* wrap-reverse flips the cross axis: this is the bottom */
+.maplibregl-ctrl-bottom-right > .maplibregl-ctrl-group { order: 2; }
 .maplibregl-ctrl-attrib { font-size: 11px; }
 .maplibregl-ctrl-scale {
-  margin: 0 0 6px !important; padding: 1px 6px 0; border: 2px solid #5f6368; border-top: 0;
+  padding: 1px 6px 0; border: 2px solid #5f6368; border-top: 0;
   background: rgb(255 255 255 / 0.85); color: #3c4043; font: 600 11px/16px inherit;
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.15);
 }
@@ -84,12 +95,6 @@ body { @apply bg-bg font-sans text-ink antialiased; font-feature-settings: 'tnum
   transition: transform 150ms;
 }
 .dot:hover, .dot[data-selected='true'] { transform: scale(1.5); }
-
-.origin {
-  width: 16px; height: 16px; border-radius: 50%;
-  background: #1a73e8; border: 3px solid #fff;
-  box-shadow: 0 0 0 6px rgb(26 115 232 / 0.18), 0 1px 3px rgb(0 0 0 / 0.3);
-}
 
 /* Pins carry inline z-indexes up to 100; keep the info card above every one of them. */
 .maplibregl-popup { z-index: 200; }

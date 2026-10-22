@@ -23,7 +23,6 @@ type Props = {
   dots: Place[]
   selected: number | null
   onSelect: (id: number) => void
-  origin: Origin | null
   // What the camera frames when the inputs change.
   fitTo: 'picks' | 'dots'
 }
@@ -65,11 +64,10 @@ function dotsGeoJSON(dots: Place[], skip: Set<number>): FeatureCollection {
 
 // MapLibre with keyless vector tiles, styled to read like Google Maps. Picks are DOM pins so they
 // share the app's CSS; everything else is a circle layer.
-export default function PlaceMap({ picks, dots, selected, onSelect, origin, fitTo }: Props) {
+export default function PlaceMap({ picks, dots, selected, onSelect, fitTo }: Props) {
   const el = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
   const pins = useRef(new Map<number, { marker: maplibregl.Marker; node: HTMLElement }>())
-  const extras = useRef<maplibregl.Marker[]>([])
   const popup = useRef<maplibregl.Popup | null>(null)
   const byId = useRef(new Map<number, Place>())
   const onSelectRef = useRef(onSelect)
@@ -95,7 +93,7 @@ export default function PlaceMap({ picks, dots, selected, onSelect, origin, fitT
         m.touchZoomRotate.disableRotation()
         m.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-right')
         m.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right')
-        // Google-style distance gauge under the zoom buttons.
+        // Google-style distance gauge, to the left of the zoom buttons (see .maplibregl-ctrl-bottom-right).
         m.addControl(new maplibregl.ScaleControl({ maxWidth: 110, unit: 'metric' }), 'bottom-right')
         m.on('load', () => {
           // Compact attribution opens itself on first load; Google keeps it as a small chip.
@@ -135,9 +133,7 @@ export default function PlaceMap({ picks, dots, selected, onSelect, origin, fitT
     const m = map.current
     if (!m || !ready) return
     for (const { marker } of pins.current.values()) marker.remove()
-    for (const x of extras.current) x.remove()
     pins.current.clear()
-    extras.current = []
     popup.current?.remove()
 
     byId.current = new Map([...dots, ...picks].map((p) => [p.business_id, p]))
@@ -166,14 +162,8 @@ export default function PlaceMap({ picks, dots, selected, onSelect, origin, fitT
       const marker = new maplibregl.Marker({ element: node, anchor: 'bottom', offset: [clashes * 16, -4] }).setLngLat([p.lng, p.lat]).addTo(m)
       pins.current.set(p.business_id, { marker, node: node.firstElementChild as HTMLElement })
     })
-    if (origin) {
-      const node = document.createElement('div')
-      node.className = 'origin'
-      node.title = `Distances from ${origin.label}`
-      extras.current.push(new maplibregl.Marker({ element: node }).setLngLat([origin.lng, origin.lat]).addTo(m))
-    }
     if (!bounds.isEmpty()) m.fitBounds(bounds, { padding, maxZoom: 14.5, duration: 600 })
-  }, [picks, dots, origin, ready, fitTo])
+  }, [picks, dots, ready, fitTo])
 
   // Selection: raise the pin or fill the dot, open a Google-style info card, and pan it into view.
   useEffect(() => {

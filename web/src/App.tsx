@@ -115,7 +115,7 @@ export default function App() {
       <nav className="scroll-thin flex shrink-0 gap-1 overflow-x-auto border-b border-line bg-white px-3 py-2 lg:w-56 lg:flex-col lg:overflow-y-auto lg:border-r lg:border-b-0 lg:px-3 lg:py-5">
         <div className="hidden px-3 pb-6 lg:block"><Logo /></div>
 
-        <RailHeading>This Week</RailHeading>
+        <RailHeading>Weekly Picks</RailHeading>
         {contexts.map((c) => (
           <RailItem key={c} active={view === 'picks' && c === context} onClick={() => chooseContext(c)} hint={contextHint(picks?.contexts[c]?.prefs)}>
             {label(c)}
@@ -223,7 +223,6 @@ export default function App() {
           dots={dots}
           selected={selected}
           onSelect={select}
-          origin={view === 'picks' ? origin : null}
           fitTo={browsing ? 'dots' : 'picks'}
         />
         {view === 'picks' && <button

@@ -17,12 +17,13 @@ const median = (xs: number[]) => {
 const mean = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null)
 const fmt = (x: number | null, d = 2) => (x == null ? '–' : x.toFixed(d))
 
-// Clean y ticks: 0 and three round steps up to (at least) the max.
+// Clean y ticks: the smallest round step (1, 2, 2.5 or 5 × 10^n) that covers the max in at most
+// four steps, so the axis ends just above the tallest bar (max 340 → 0, 100, … 400, not 600).
 function ticks(max: number) {
-  const raw = max / 3
-  const mag = 10 ** Math.floor(Math.log10(Math.max(raw, 1)))
-  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw) ?? mag * 10
-  return [0, step, step * 2, step * 3]
+  const top = Math.max(max, 1)
+  const mag = 10 ** Math.max(0, Math.floor(Math.log10(top / 4)))  // counts: whole-number steps
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s % 1 === 0 && Math.ceil(top / s) <= 4)!
+  return Array.from({ length: Math.ceil(top / step) + 1 }, (_, i) => i * step)
 }
 
 export default function Stats({ places, onClose }: { places: Place[]; onClose: () => void }) {
