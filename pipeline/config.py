@@ -12,8 +12,10 @@ SG_CENTER = (1.2903, 103.8520)  # City Hall; used as `coords` for city-scoped di
 
 CATEGORY = "RES"
 
-# Raw gzipped API responses kept on the data branch; the DB keeps normalized history forever.
-SNAPSHOT_RETENTION_DAYS = 30
+# Raw gzipped API responses and daily reports kept on the data branch (debugging only).
+SNAPSHOT_RETENTION_DAYS = 7
+# Past picks, for the no-repeat cooldown and the published weekly files.
+PICKS_RETENTION_DAYS = 365
 
 # Beli score and rating count only come one place at a time (two calls each, no bulk form,
 # login required), so each run (every 6 hours) fetches a small batch. At 1.25s per call,

@@ -85,9 +85,9 @@ def missing_fields(con: sqlite3.Connection) -> dict:
         return {"businesses": n, "fields": fields}
 
     report = {"all": coverage("1")}
-    for (lt,) in con.execute("SELECT DISTINCT list_type FROM sightings ORDER BY 1"):
+    for (lt,) in con.execute("SELECT DISTINCT list_type FROM list_members ORDER BY 1"):
         report[lt] = coverage(
-            "business_id IN (SELECT business_id FROM sightings WHERE list_type = ?)", (lt,))
+            "business_id IN (SELECT business_id FROM list_members WHERE list_type = ?)", (lt,))
 
     # A short sample of the worst rows makes it easy to eyeball what's wrong.
     worst = con.execute(

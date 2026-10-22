@@ -70,12 +70,49 @@ def test_geocode_fallback_fills_missing_coords(out):
     assert r["lat"] == pytest.approx(1.2808) and r["geo_source"] == "onemap"
 
 
-def test_sightings_are_daily_history(out):
+def test_lists_keep_only_current_contents(out):
     con = db.connect(out / "savor.db")
-    days = [r[0] for r in con.execute("SELECT DISTINCT captured_on FROM sightings ORDER BY 1")]
-    assert days == ["2026-10-14", "2026-10-15"]
-    ranked = con.execute("SELECT user_score FROM sightings WHERE list_type='ranked' AND business_id=1").fetchone()
-    assert ranked[0] == 9.6
+    assert not con.execute("SELECT 1 FROM sqlite_master WHERE name = 'sightings'").fetchone()
+    # Two days of runs, still one row per place per list: membership is replaced, not appended.
+    dupes = con.execute("SELECT COUNT(*) - COUNT(DISTINCT list_type || business_id) FROM list_members").fetchone()[0]
+    assert dupes == 0
+    r = con.execute("SELECT user_score, since, captured_on FROM list_members WHERE list_type='ranked' AND business_id=1").fetchone()
+    assert tuple(r) == (9.6, "2026-10-14", "2026-10-15")
+
+
+def test_replace_list_tracks_changes_and_since(tmp_path):
+    con = db.connect(tmp_path / "t.db")
+    assert db.replace_list(con, "popular", "2026-10-01", [(1, 0, None), (2, 1, None)]) == (2, 0)
+    assert db.replace_list(con, "popular", "2026-10-02", [(2, 0, None), (3, 1, None)]) == (1, 1)
+    rows = con.execute("SELECT business_id, position, since FROM list_members ORDER BY 1").fetchall()
+    assert [tuple(r) for r in rows] == [(2, 0, "2026-10-01"), (3, 1, "2026-10-02")]
+
+
+def test_old_sightings_migrate_to_latest_capture(tmp_path):
+    import sqlite3
+
+    path = tmp_path / "old.db"
+    old = sqlite3.connect(path)
+    old.executescript("""
+        CREATE TABLE businesses (business_id INTEGER PRIMARY KEY, name TEXT NOT NULL, in_sg INTEGER,
+            first_seen TEXT NOT NULL, last_seen TEXT NOT NULL);
+        CREATE TABLE sightings (captured_on TEXT NOT NULL, list_type TEXT NOT NULL, business_id INTEGER NOT NULL,
+            position INTEGER, user_score REAL, captured_at TEXT NOT NULL, PRIMARY KEY (captured_on, list_type, business_id));
+        INSERT INTO businesses VALUES (1, 'A', 1, '2026-10-01', '2026-10-02'), (2, 'B', 1, '2026-10-01', '2026-10-02');
+        INSERT INTO sightings VALUES
+            ('2026-10-01', 'popular', 1, 4, NULL, 't'), ('2026-10-02', 'popular', 2, 0, NULL, 't'),
+            ('2026-10-01', 'bookmarks', 2, 0, NULL, 't'), ('2026-10-02', 'bookmarks', 2, 0, NULL, 't'),
+            ('2026-10-01', 'filter_trending', 1, 0, NULL, 't');
+    """)
+    old.commit()
+    old.close()
+    con = db.connect(path)
+    rows = con.execute("SELECT list_type, business_id, position, since, captured_on FROM list_members ORDER BY 1, 2").fetchall()
+    # Place 1 dropped off popular on the 2nd, so only its latest capture survives; bookmarks keep the first date.
+    assert [tuple(r) for r in rows] == [("bookmarks", 2, 0, "2026-10-01", "2026-10-02"),
+                                        ("catalogue", 1, 0, "2026-10-01", "2026-10-01"),
+                                        ("popular", 2, 0, "2026-10-02", "2026-10-02")]
+    assert not con.execute("SELECT 1 FROM sqlite_master WHERE name = 'sightings'").fetchone()
 
 
 def test_picks_come_from_catalogue_and_explain_themselves(out):
@@ -97,9 +134,9 @@ def test_own_lists_tag_but_never_filter_or_boost(tmp_path):
         db.upsert_business(con, {"business_id": bid, "name": name, "lat": 1.29, "lng": 103.85, "price": 2,
                                  "cuisines": ["Thai"], "beli_score": 8.0, "review_count": 100}, "2026-10-14")
     con.execute("UPDATE businesses SET in_sg = 1")
-    db.add_sighting(con, "2026-10-14", "t", "ranked", 1, 0, 9.0)
-    db.add_sighting(con, "2026-10-14", "t", "bookmarks", 1, 0, None)
-    db.add_sighting(con, "2026-10-14", "t", "catalogue", 2, 0, None)
+    db.replace_list(con, "ranked", "2026-10-14", [(1, 0, 9.0)])
+    db.replace_list(con, "bookmarks", "2026-10-14", [(1, 0, None)])
+    db.replace_list(con, "catalogue", "2026-10-14", [(2, 0, None)])
     cands, ranked = recommend.candidates(con)
     by = {b["business_id"]: b for b in cands}
     assert set(by) == {1, 2} and [r["business_id"] for r in ranked] == [1]
@@ -214,7 +251,6 @@ def test_last_weeks_picks_sit_out(tmp_path):
     for bid in range(1, 31):
         db.upsert_business(con, {"business_id": bid, "name": f"P{bid}", "lat": 1.29, "lng": 103.85,
                                  "price": 2, "cuisines": [f"C{bid}"]}, "2026-10-01")
-        db.add_sighting(con, "2026-10-01", "t", "catalogue", bid, bid, None)
     con.execute("UPDATE businesses SET in_sg = 1")
     prefs = {"picks": 10, "budget": 2}
     weeks = ["2026-10-05", "2026-10-12", "2026-10-19"]
@@ -249,7 +285,7 @@ def test_score_queue_does_unfetched_first_then_stalest(tmp_path):
     con.execute("UPDATE businesses SET in_sg = 1")
     db.set_fields(con, 1, count_fetched_on="2026-10-20")
     db.set_fields(con, 2, count_fetched_on="2026-09-01")
-    db.add_sighting(con, "2026-10-01", "t", "popular", 4, 0, None)
+    db.replace_list(con, "popular", "2026-10-01", [(4, 0, None)])
     order = [r["business_id"] for r in ingest.score_queue(con, "2026-10-22")]
     # Never fetched (popular #1 ahead of the rest), then oldest fetch first; no expiry window.
     assert order == [4, 3, 2, 1]

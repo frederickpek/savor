@@ -88,7 +88,7 @@ def ingest_lists(beli: Beli, con, snap: Path, today: str, now: str, summary: dic
             print(f"  {source}: FAILED {e!r}")
             continue
         write_raw(snap, source, payload)
-        n = 0
+        members = []
         for pos, (b, user_score) in enumerate(list_rows(source, payload)):
             row = normalize.business(b)
             if row is None:
@@ -100,24 +100,20 @@ def ingest_lists(beli: Beli, con, snap: Path, today: str, now: str, summary: dic
                     "VALUES (?, ?, ?, ?)", (row["business_id"], f"#{row['business_id']}", today, today))
             else:
                 db.upsert_business(con, row, today)
-            db.add_sighting(con, today, now, source, row["business_id"], pos, user_score)
-            n += 1
-        summary["sources"][source] = n
-        print(f"  {source}: {n} businesses{churn(con, source, today)}")
+            members.append((row["business_id"], pos, user_score))
+        # How much the list changed since the previous fetch, so the run log shows how often Beli
+        # actually refreshes it.
+        prev = con.execute("SELECT MAX(captured_on) FROM list_members WHERE list_type = ?", (source,)).fetchone()[0]
+        if not members and prev:
+            # An empty answer for a list that had places is far likelier a hiccup than real.
+            summary["failures"][source] = "empty response; kept the previous list"
+            print(f"  {source}: empty response; keeping the list from {prev}")
+            continue
+        added, removed = db.replace_list(con, source, today, members)
+        summary["sources"][source] = len(members)
+        churn = f" (+{added} / -{removed} since {prev})" if prev else ""
+        print(f"  {source}: {len(members)} businesses{churn}")
     con.commit()
-
-
-def churn(con, source: str, today: str) -> str:
-    """How much a list changed since its previous capture, e.g. " (+3 / -3 since 2026-10-20)",
-    so the run log shows how often Beli actually refreshes it."""
-    prev = con.execute("SELECT MAX(captured_on) FROM sightings WHERE list_type = ? AND captured_on < ?",
-                       (source, today)).fetchone()[0]
-    if prev is None:
-        return ""
-    ids = lambda day: {r[0] for r in con.execute(
-        "SELECT business_id FROM sightings WHERE list_type = ? AND captured_on = ?", (source, day))}
-    now, before = ids(today), ids(prev)
-    return f" (+{len(now - before)} / -{len(before - now)} since {prev})"
 
 
 def score_queue(con, today: str) -> list[dict]:
@@ -136,13 +132,13 @@ def score_queue(con, today: str) -> list[dict]:
            ORDER BY
              b.count_fetched_on IS NOT NULL,
              b.count_fetched_on,
-             COALESCE((SELECT MIN(s.position) FROM sightings s WHERE s.business_id = b.business_id
-                       AND s.list_type = 'popular'), 9999),
+             COALESCE((SELECT m.position FROM list_members m WHERE m.business_id = b.business_id
+                       AND m.list_type = 'popular'), 9999),
              EXISTS (SELECT 1 FROM guide g WHERE g.business_id = b.business_id) DESC,
              EXISTS (SELECT 1 FROM picks p WHERE p.business_id = b.business_id
                      AND p.pick_date = (SELECT MAX(pick_date) FROM picks)) DESC,
-             EXISTS (SELECT 1 FROM sightings s WHERE s.business_id = b.business_id
-                     AND s.list_type IN ('bookmarks', 'ranked')) DESC,
+             EXISTS (SELECT 1 FROM list_members m WHERE m.business_id = b.business_id
+                     AND m.list_type IN ('bookmarks', 'ranked')) DESC,
              (b.price IS NOT NULL AND b.cuisines IS NOT NULL) DESC,
              b.business_id""")]
 

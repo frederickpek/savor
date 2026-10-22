@@ -7,7 +7,7 @@
 Credentials come from BELI_EMAIL + BELI_PASSWORD (or BELI_REFRESH_TOKEN), read from the
 environment or, locally, from .env (see .env.example). Output layout:
 
-    savor.db                         normalized history (businesses, sightings, social, picks)
+    savor.db                         current state (businesses, list_members, social) + a year of picks
     snapshots/<date>/<source>.json.gz  raw API responses, last SNAPSHOT_RETENTION_DAYS days
     reports/<date>.json              schema audit + missing-field report
     api/index.json                   latest week, contexts, run status
@@ -24,7 +24,7 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from . import audit, db, ingest, recommend
-from .config import CLOSED_STATUSES, SNAPSHOT_RETENTION_DAYS
+from .config import CLOSED_STATUSES, PICKS_RETENTION_DAYS, SNAPSHOT_RETENTION_DAYS
 
 SGT = timezone(timedelta(hours=8))
 
@@ -77,11 +77,21 @@ def fingerprints(snap: Path) -> dict:
     return out
 
 
-def prune_snapshots(out: Path, today: str) -> None:
+def prune(con, out: Path, today: str) -> None:
+    """Keep the data branch a bounded size: raw snapshots and daily reports for a week, picks
+    (the no-repeat cooldown reads them) for a year."""
     cutoff = (date.fromisoformat(today) - timedelta(days=SNAPSHOT_RETENTION_DAYS)).isoformat()
     for d in (out / "snapshots").glob("*"):
         if d.is_dir() and d.name < cutoff:
             shutil.rmtree(d)
+    for f in (out / "reports").glob("????-??-??.json"):
+        if f.stem < cutoff:
+            f.unlink()
+    year_ago = (date.fromisoformat(today) - timedelta(days=PICKS_RETENTION_DAYS)).isoformat()
+    con.execute("DELETE FROM picks WHERE pick_date < ?", (year_ago,))
+    for f in (out / "api" / "picks").glob("????-??-??.json"):
+        if f.stem < year_ago:
+            f.unlink()
 
 
 # places.json is ~18k rows, so it ships as {cols, rows} (about 1.5 MB, 0.5 MB gzipped)
@@ -95,9 +105,7 @@ def catalogue_json(con) -> dict:
     rows = db.business_rows(con, f"in_sg = 1 AND lat IS NOT NULL AND COALESCE(status, '') NOT IN ({closed})")
     # Beli's popular-in-Singapore order from the latest capture, 1-based (the SG Top 200 view).
     ranks = dict(con.execute(
-        """SELECT business_id, MIN(position) + 1 FROM sightings WHERE list_type = 'popular'
-           AND captured_on = (SELECT MAX(captured_on) FROM sightings WHERE list_type = 'popular')
-           GROUP BY business_id""").fetchall())
+        "SELECT business_id, position + 1 FROM list_members WHERE list_type = 'popular'").fetchall())
     guide = recommend.michelin()
     for b in rows:
         b["popular_rank"] = ranks.get(b["business_id"])
@@ -124,7 +132,7 @@ def build_picks(con, prefs: dict, today: str) -> tuple[dict, dict[str, dict[int,
     cands, ranked = recommend.candidates(con, week)
     recent = (date.fromisoformat(today) - timedelta(days=7)).isoformat()
     # Everything is "new" on the first day of history, so only count places first seen after it.
-    first_day = con.execute("SELECT MIN(captured_on) FROM sightings").fetchone()[0] or today
+    first_day = con.execute("SELECT MIN(first_seen) FROM businesses").fetchone()[0] or today
     recent = max(recent, (date.fromisoformat(first_day) + timedelta(days=1)).isoformat())
     contexts = {"default": None, **{c: c for c in prefs.get("contexts", {})}}
     out, scores = {}, {}
@@ -188,7 +196,7 @@ def main() -> None:
                {**previous, **{s: e["fingerprint"] for s, e in schema.items() if "fingerprint" in e}})
         if args.status_file:
             args.status_file.with_suffix(".md").write_text(audit.markdown(schema, missing, summary))
-        prune_snapshots(out, today)
+        prune(con, out, today)
 
     core_ok = all(s not in summary["failures"] for s in ingest.CORE_SOURCES)
     status = "skipped" if args.skip_ingest else ("ok" if not summary["failures"] else "partial" if core_ok else "failed")

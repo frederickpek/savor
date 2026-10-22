@@ -30,15 +30,16 @@ CREATE TABLE IF NOT EXISTS businesses (
     geo_fetched_on    TEXT
 );
 
--- One row per business per list per day: the history of what each list contained.
-CREATE TABLE IF NOT EXISTS sightings (
-    captured_on TEXT NOT NULL,
+-- What each list contains right now: replaced on every successful fetch, so it stays one row per
+-- place per list however many days pass. A failed fetch leaves the last good copy in place.
+CREATE TABLE IF NOT EXISTS list_members (
     list_type   TEXT NOT NULL,          -- ranked | bookmarks | popular | catalogue
     business_id INTEGER NOT NULL,
-    position    INTEGER,
+    position    INTEGER,                -- 0-based order in the list
     user_score  REAL,                   -- your score, ranked list only
-    captured_at TEXT NOT NULL,          -- ISO timestamp (UTC)
-    PRIMARY KEY (captured_on, list_type, business_id)
+    since       TEXT NOT NULL,          -- YYYY-MM-DD it has been on the list since
+    captured_on TEXT NOT NULL,          -- YYYY-MM-DD of the fetch this row came from
+    PRIMARY KEY (list_type, business_id)
 );
 
 -- Friend activity, aggregated per business so no friend identities are stored.
@@ -68,7 +69,6 @@ CREATE TABLE IF NOT EXISTS picks (
     PRIMARY KEY (pick_date, context, rank)
 );
 
-CREATE INDEX IF NOT EXISTS sightings_by_business ON sightings (business_id, list_type);
 CREATE INDEX IF NOT EXISTS picks_by_business ON picks (business_id, pick_date);
 """
 
@@ -98,13 +98,31 @@ def connect(path: Path) -> sqlite3.Connection:
             DROP TABLE picks_old;
             CREATE INDEX IF NOT EXISTS picks_by_business ON picks (business_id, pick_date);
         """)
-    # Older runs called the catalogue `filter_trending` and also kept Beli's worldwide trending list.
+    if con.execute("SELECT 1 FROM sqlite_master WHERE name = 'sightings'").fetchone():
+        migrate_sightings(con)
+    con.commit()
+    return con
+
+
+def migrate_sightings(con: sqlite3.Connection) -> None:
+    """Older DBs kept every list's contents for every day (`sightings`, ~18k rows a day). Keep each
+    list's latest capture as `list_members`, drop the history, and shrink the file."""
+    # Even older runs called the catalogue `filter_trending` and kept Beli's worldwide trending list.
     con.execute("UPDATE OR REPLACE sightings SET list_type = 'catalogue' WHERE list_type = 'filter_trending'")
     con.execute("DELETE FROM sightings WHERE list_type = 'trending'")
     con.execute("""DELETE FROM businesses WHERE in_sg IS NOT 1
                    AND business_id NOT IN (SELECT business_id FROM sightings)""")
+    con.execute(
+        """INSERT OR REPLACE INTO list_members
+           SELECT s.list_type, s.business_id, s.position, s.user_score,
+                  (SELECT MIN(f.captured_on) FROM sightings f
+                   WHERE f.list_type = s.list_type AND f.business_id = s.business_id),
+                  s.captured_on
+           FROM sightings s
+           WHERE s.captured_on = (SELECT MAX(captured_on) FROM sightings l WHERE l.list_type = s.list_type)""")
+    con.execute("DROP TABLE sightings")
     con.commit()
-    return con
+    con.execute("VACUUM")
 
 
 def upsert_business(con: sqlite3.Connection, row: dict, today: str) -> None:
@@ -130,12 +148,17 @@ def set_fields(con: sqlite3.Connection, business_id: int, **fields) -> None:
     con.execute(f"UPDATE businesses SET {sets} WHERE business_id = :id", {**fields, "id": business_id})
 
 
-def add_sighting(con: sqlite3.Connection, captured_on: str, captured_at: str, list_type: str,
-                 business_id: int, position: int | None, user_score: float | None) -> None:
-    con.execute(
-        """INSERT OR REPLACE INTO sightings VALUES (?, ?, ?, ?, ?, ?)""",
-        (captured_on, list_type, business_id, position, user_score, captured_at),
-    )
+def replace_list(con: sqlite3.Connection, list_type: str, today: str,
+                 members: list[tuple[int, int, float | None]]) -> tuple[int, int]:
+    """Make `members` [(business_id, position, user_score)] the list's contents, keeping each
+    returning place's `since`. Returns (added, removed) versus the previous contents."""
+    before = dict(con.execute("SELECT business_id, since FROM list_members WHERE list_type = ?", (list_type,)).fetchall())
+    con.execute("DELETE FROM list_members WHERE list_type = ?", (list_type,))
+    con.executemany(
+        "INSERT OR IGNORE INTO list_members VALUES (?, ?, ?, ?, ?, ?)",
+        [(list_type, bid, pos, score, before.get(bid, today), today) for bid, pos, score in members])
+    now = {bid for bid, _, _ in members}
+    return len(now - before.keys()), len(before.keys() - now)
 
 
 def business_rows(con: sqlite3.Connection, where: str = "1", params: tuple = ()) -> list[dict]:

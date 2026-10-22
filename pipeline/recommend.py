@@ -201,13 +201,8 @@ def candidates(con, week: str | None = None) -> tuple[list[dict], list[dict]]:
     rows = db.business_rows(con, f"in_sg = 1 AND COALESCE(status, '') NOT IN ({closed})")
     guide = michelin()
     outlets = outlet_counts([r[0] for r in con.execute("SELECT name FROM businesses WHERE in_sg = 1")])
-    latest = con.execute("SELECT MAX(captured_on) FROM sightings").fetchone()[0]
     lists = defaultdict(dict)
-    for r in con.execute(
-        """SELECT business_id, list_type, MIN(captured_on) first_on, MAX(captured_on) last_on,
-                  MAX(CASE WHEN captured_on = ? THEN user_score END) score,
-                  MIN(CASE WHEN captured_on = ? THEN position END) position
-           FROM sightings GROUP BY business_id, list_type""", (latest, latest)):
+    for r in con.execute("SELECT * FROM list_members WHERE list_type != 'catalogue'"):
         lists[r["business_id"]][r["list_type"]] = dict(r)
     social = {r["business_id"]: dict(r) for r in con.execute("SELECT * FROM social")}
     # Earlier weeks only, so regenerating this week (after a prefs edit) doesn't penalise its own picks.
@@ -217,14 +212,12 @@ def candidates(con, week: str | None = None) -> tuple[list[dict], list[dict]]:
     cands, ranked = [], []
     for b in rows:
         seen = lists.get(b["business_id"], {})
-        rk = seen.get("ranked")
-        b["ranked_score"] = rk["score"] if rk and rk["last_on"] == latest else None
+        b["ranked_score"] = seen.get("ranked", {}).get("user_score")
         if b["ranked_score"] is not None:
             ranked.append({**b, "user_score": b["ranked_score"]})
-        bm = seen.get("bookmarks")
-        b["bookmarked_on"] = bm["first_on"] if bm and bm["last_on"] == latest else None
-        b["popular"] = "popular" in seen and seen["popular"]["last_on"] == latest
-        # Beli's own order on the popular list, 1-based; None when it isn't on today's list.
+        b["bookmarked_on"] = seen.get("bookmarks", {}).get("since")
+        b["popular"] = "popular" in seen
+        # Beli's own order on the popular list, 1-based; None when it isn't on the current list.
         b["popular_rank"] = seen["popular"]["position"] + 1 if b["popular"] and seen["popular"]["position"] is not None else None
         b["outlets"] = outlets.get(b["name"], 1)
         b["michelin"] = guide.get(b["business_id"])

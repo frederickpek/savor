@@ -85,7 +85,7 @@ jobs:
           # Publish whatever was written even on failure; the job goes red at the end.
           [ -f data-store/api/index.json ]
 
-      - name: Publish data branch (single commit; history is in savor.db)
+      - name: Publish data branch (single commit, so the branch never accumulates history)
         if: inputs.mode != 'deploy-only'
         working-directory: data-store
         run: |

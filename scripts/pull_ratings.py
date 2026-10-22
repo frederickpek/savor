@@ -115,7 +115,7 @@ def main() -> None:
         todo = todo[: args.limit]
     names = dict(con.execute("SELECT business_id, name FROM businesses").fetchall())
     ranks = dict(con.execute(
-        "SELECT business_id, MIN(position) + 1 FROM sightings WHERE list_type = 'popular' GROUP BY business_id").fetchall())
+        "SELECT business_id, position + 1 FROM list_members WHERE list_type = 'popular'").fetchall())
     total = len(todo)
     fresh = sum(r["count_fetched_on"] is None for r in todo)
     say(f"{total:,} places queued: {fresh:,} with no data yet, then {total - fresh:,} already fetched (stalest first)")
