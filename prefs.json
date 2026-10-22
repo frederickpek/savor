@@ -1,17 +1,42 @@
 {
-  "budget": 3,
-  "cuisines_like": [],
   "cuisines_avoid": ["Fast Food", "Food Court"],
   "max_outlets": 5,
   "origin": { "label": "City Hall", "lat": 1.2903, "lng": 103.852 },
-  "max_km": 8,
   "picks": 10,
-  "popular_picks": 4,
-  "min_beli_score": 7.5,
+  "popular_picks": 3,
+  "price_max": 3,
+  "include_unpriced": true,
+  "min_beli_score": 7.0,
   "min_ratings": 20,
+  "cooldown_weeks": 10,
+  "max_picks_per_26_weeks": 2,
+  "max_same_cuisine": 2,
+  "max_same_neighbourhood": 2,
   "contexts": {
-    "weeknight": { "budget": 2, "max_km": 10 },
-    "date-night": { "budget": 4 },
-    "weekend-explore": { "max_km": 20 }
+    "date-night": {
+      "price_min": 3,
+      "price_max": 4,
+      "include_unpriced": false,
+      "max_km": 8,
+      "min_beli_score": 8.0,
+      "cuisines_avoid": ["Fast Food", "Food Court", "Coffee Shop", "Street Food", "Breakfast"]
+    },
+    "weekend-explore": {
+      "price_max": 4,
+      "min_km": 5,
+      "min_beli_score": 7.5,
+      "popular_picks": 1
+    },
+    "cheap-eats": {
+      "price_max": 1,
+      "include_unpriced": false,
+      "min_beli_score": 6.5
+    },
+    "hidden-gems": {
+      "min_beli_score": 7.5,
+      "max_ratings": 60,
+      "popular_picks": 0,
+      "exclude_popular": true
+    }
   }
 }

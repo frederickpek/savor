@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS picks (
     context     TEXT NOT NULL DEFAULT 'default',
     rank        INTEGER NOT NULL,
     business_id INTEGER NOT NULL,
-    score       REAL NOT NULL,
+    score       REAL NOT NULL,          -- unused since picks became random draws (0)
     reasons     TEXT NOT NULL,          -- JSON array of strings
     PRIMARY KEY (pick_date, context, rank)
 );

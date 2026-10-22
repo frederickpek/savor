@@ -26,12 +26,17 @@ const weekLabel = (monday: string) => {
   return `${day(a, a.getMonth() !== b.getMonth())} – ${day(b, true)}`
 }
 
-// One-line summary of what makes a context different, e.g. "$$ · within 4 km".
+// One-line summary of a context's rules, e.g. "$$$–$$$$ · Beli 8+ · within 8 km".
 function contextHint(prefs: Record<string, unknown> | undefined) {
   if (!prefs) return ''
+  const num = (k: string) => (typeof prefs[k] === 'number' ? (prefs[k] as number) : null)
+  const [lo, hi] = [num('price_min') ?? 1, num('price_max') ?? 4]
   const bits: string[] = []
-  if (typeof prefs.budget === 'number') bits.push(price(prefs.budget))
-  if (typeof prefs.max_km === 'number') bits.push(`within ${prefs.max_km} km`)
+  if (lo > 1 || hi < 4) bits.push(lo === hi ? price(lo) : lo > 1 && hi === 4 ? `${price(lo)}+` : `${price(lo)}–${price(hi)}`)
+  if (num('min_beli_score') != null) bits.push(`Beli ${num('min_beli_score')}+`)
+  if (num('max_ratings') != null) bits.push(`under ${num('max_ratings')! + 1} ratings`)
+  if (num('min_km') != null) bits.push(`${num('min_km')} km+ away`)
+  if (num('max_km') != null) bits.push(`within ${num('max_km')} km`)
   return bits.join(' · ')
 }
 
@@ -59,6 +64,7 @@ export default function App() {
 
   const list: Pick[] = useMemo(() => picks?.contexts[context]?.picks ?? [], [picks, context])
   const prefs = picks?.contexts[context]?.prefs
+  const pool = picks?.contexts[context]?.pool
   const origin = (prefs?.origin as Origin | undefined) ?? null
   const select = useCallback((id: number) => setSelected((cur) => (cur === id ? null : id)), [])
 
@@ -175,8 +181,8 @@ export default function App() {
         <PanelHeader
           title={label(context)}
           subtitle={<>
-            {list.length ? `${list.length} places worth trying this week` : 'Loading picks…'}
-            {index && `, chosen from ${index.candidates.toLocaleString()} in your pool`}
+            {list.length ? `${list.length} places worth trying this week` : picks ? 'Nothing this week' : 'Loading picks…'}
+            {pool != null && `, drawn at random from ${pool.toLocaleString()} that fit`}
           </>}
         >
             <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-medium text-ink/80">
@@ -203,7 +209,7 @@ export default function App() {
                 ))}
               </ol>
             ) : (
-              <p className="text-sm text-muted">Nothing fits this context this week. Loosen its budget or distance in prefs.json.</p>
+              <p className="text-sm text-muted">Nothing fits this context this week. Loosen its rules in prefs.json.</p>
             )}
           </Section>
         </div>

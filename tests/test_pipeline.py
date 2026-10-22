@@ -1,4 +1,5 @@
 import json
+from datetime import date, timedelta
 import subprocess
 import sys
 from pathlib import Path
@@ -119,13 +120,24 @@ def test_picks_come_from_catalogue_and_explain_themselves(out):
     # 2026-10-14/15 are a Wednesday and Thursday: both runs land in the week of Monday 12 Oct.
     picks = json.loads((out / "api" / "picks" / "2026-10-12.json").read_text())
     assert picks["date"] == "2026-10-12" and picks["generated_on"] == "2026-10-15"
-    default = picks["contexts"]["default"]["picks"]
-    assert 5 <= len(default) <= 10
-    assert all(p["reasons"] for p in default)
-    assert set(picks["contexts"]) == {"default", "weeknight", "date-night", "weekend-explore"}
-    names = {p["name"] for c in picks["contexts"].values() for p in c["picks"]}
+    assert set(picks["contexts"]) == {"default", "date-night", "weekend-explore", "cheap-eats", "hidden-gems"}
+    every = [p for c in picks["contexts"].values() for p in c["picks"]]
+    assert every and all(p["reasons"] for p in every)
+    # The cooldown is shared, so no place appears in two contexts in the same week.
+    assert len({p["business_id"] for p in every}) == len(every)
+    names = {p["name"] for p in every}
     # Chains over max_outlets, cuisines_avoid (Fast Food) and closed places never make it.
     assert not any(n.startswith(("Ya Kun", "McDonald's", "Gone Bistro")) for n in names)
+    for c in picks["contexts"].values():
+        assert len(c["picks"]) <= c["pool"] or c["pool"] == 0
+
+
+def place(bid, **kw):
+    """A candidate as recommend.candidates() returns it."""
+    return {"business_id": bid, "name": f"P{bid}", "cuisines": [f"C{bid}"], "neighborhood": None, "price": 2,
+            "beli_score": 8.0, "review_count": 100, "popular": False, "popular_rank": None, "outlets": 1,
+            "michelin": None, "lat": 1.29, "lng": 103.85, "picked_on": [], "bookmarked_on": None,
+            "ranked_score": None, **kw}
 
 
 def test_own_lists_tag_but_never_filter_or_boost(tmp_path):
@@ -136,13 +148,12 @@ def test_own_lists_tag_but_never_filter_or_boost(tmp_path):
     con.execute("UPDATE businesses SET in_sg = 1")
     db.replace_list(con, "ranked", "2026-10-14", [(1, 0, 9.0)])
     db.replace_list(con, "bookmarks", "2026-10-14", [(1, 0, None)])
-    db.replace_list(con, "catalogue", "2026-10-14", [(2, 0, None)])
     cands, ranked = recommend.candidates(con)
     by = {b["business_id"]: b for b in cands}
     assert set(by) == {1, 2} and [r["business_id"] for r in ranked] == [1]
     assert by[1]["ranked_score"] == 9.0 and by[1]["bookmarked_on"] == "2026-10-14"
-    scored = {b["business_id"]: b for b in recommend.rank(cands, ranked, {"budget": 2}, "2026-10-14", "2026-10-15")}
-    assert scored[1]["components"] == scored[2]["components"]
+    # Both pass the rules alike; your lists change nothing about eligibility.
+    assert recommend.eligible(by[1], {}) and recommend.eligible(by[2], {})
 
 
 def test_chain_grouping():
@@ -194,16 +205,34 @@ def test_schema_drift_detected():
     assert "$.results[].id" in d["type_changed"]
 
 
-def test_jitter_rotates_by_day_but_is_stable():
-    assert recommend.jitter("2026-10-15", 1) == recommend.jitter("2026-10-15", 1)
-    assert recommend.jitter("2026-10-15", 1) != recommend.jitter("2026-10-16", 1)
+def test_draw_is_stable_within_a_week_and_reshuffles_across_weeks():
+    cands = [place(i) for i in range(1, 101)]
+    prefs = {"picks": 10}
+    ids = lambda week: [b["business_id"] for b in recommend.draw([dict(b) for b in cands], prefs, week, set())]
+    assert ids("2026-10-19") == ids("2026-10-19")
+    assert set(ids("2026-10-19")) != set(ids("2026-10-26"))
+    # Order is by Beli score for display; which places are drawn doesn't depend on input order.
+    assert set(ids("2026-10-19")) == {b["business_id"] for b in recommend.draw(list(reversed(cands)), prefs, "2026-10-19", set())}
 
 
-def test_select_spreads_cuisines():
-    base = {"neighborhood": None, "reasons": ["x"]}
-    scored = [{**base, "business_id": i, "cuisines": [c], "score": s}
-              for i, (c, s) in enumerate([("Thai", 0.9), ("Thai", 0.89), ("French", 0.85)])]
-    assert [p["business_id"] for p in recommend.select(scored, 2)] == [0, 2]
+def test_hard_rules():
+    rules = {"price_min": 3, "price_max": 4, "include_unpriced": False, "min_beli_score": 8,
+             "min_ratings": 20, "max_ratings": 60, "exclude_popular": True, "min_km": 1, "max_km": 8,
+             "cuisines_avoid": ["Fast Food"], "max_outlets": 5}
+    ok = place(1, price=3, review_count=40, km=4.0)
+    assert recommend.eligible(ok, rules)
+    for change in ({"price": 2}, {"price": None}, {"beli_score": 7.9}, {"beli_score": None}, {"review_count": 19},
+                   {"review_count": 61}, {"popular": True}, {"km": 0.5}, {"km": 9.0}, {"km": None},
+                   {"cuisines": ["Fast Food"]}, {"outlets": 6}):
+        assert not recommend.eligible({**ok, **change}, rules), change
+    # Unpriced places count unless a context says otherwise.
+    assert recommend.eligible(place(2, price=None), {"price_max": 3})
+
+
+def test_draw_limits_repeats_of_a_cuisine():
+    cands = [place(i, cuisines=["Thai"]) for i in range(1, 11)] + [place(i) for i in range(11, 21)]
+    picked = recommend.draw(cands, {"picks": 10, "max_same_cuisine": 2}, "2026-10-19", set())
+    assert len(picked) == 10 and sum(b["cuisines"] == ["Thai"] for b in picked) <= 2
 
 
 def test_env_file_fills_only_unset_vars(tmp_path, monkeypatch):
@@ -231,39 +260,37 @@ def test_week_of_is_monday():
     assert week_of("2026-10-19") == "2026-10-19"
 
 
-def test_mix_takes_popular_then_good_discoveries():
-    def place(i, popular, score, n=100):
-        return {"business_id": i, "name": f"P{i}", "cuisines": [f"C{i}"], "neighborhood": None,
-                "popular": popular, "beli_score": score, "review_count": n, "score": 1 - i / 100}
-    scored = [place(1, True, 9), place(2, True, 8), place(3, True, 8),
-              place(4, False, 6.0), place(5, False, 8.5), place(6, False, 8.2, n=3), place(7, False, 7.9)]
-    prefs = {"picks": 4, "popular_picks": 2, "min_beli_score": 7.5, "min_ratings": 20}
-    picked = recommend.mix(scored, prefs)
-    assert [p["business_id"] for p in picked] == [1, 2, 5, 7]
-    assert [p["pool"] for p in picked] == ["popular", "popular", "discover", "discover"]
-    # Not enough good discoveries yet: other catalogue places fill in before more popular ones.
-    six = recommend.mix(scored, {**prefs, "picks": 6})
-    assert len(six) == 6 and sum(p["pool"] == "popular" for p in six) == 2
+def test_draw_takes_popular_quota_then_the_rest():
+    cands = [place(i, popular=True, popular_rank=i) for i in range(1, 11)] + [place(i) for i in range(11, 41)]
+    picked = recommend.draw(cands, {"picks": 10, "popular_picks": 3}, "2026-10-19", set())
+    assert len(picked) == 10 and sum(b["pool"] == "popular" for b in picked) == 3
+    # Places another context drew this week are off limits.
+    taken = {b["business_id"] for b in picked}
+    again = recommend.draw(cands, {"picks": 10, "popular_picks": 3}, "2026-10-19", taken)
+    assert not taken & {b["business_id"] for b in again}
 
 
-def test_last_weeks_picks_sit_out(tmp_path):
-    con = db.connect(tmp_path / "t.db")
-    for bid in range(1, 31):
-        db.upsert_business(con, {"business_id": bid, "name": f"P{bid}", "lat": 1.29, "lng": 103.85,
-                                 "price": 2, "cuisines": [f"C{bid}"]}, "2026-10-01")
-    con.execute("UPDATE businesses SET in_sg = 1")
-    prefs = {"picks": 10, "budget": 2}
-    weeks = ["2026-10-05", "2026-10-12", "2026-10-19"]
+def test_cooldown_rotates_then_reuses_when_the_pool_runs_dry():
+    weeks = [(date(2026, 10, 5) + timedelta(weeks=w)).isoformat() for w in range(4)]
+    prefs = {"picks": 10, "cooldown_weeks": 10, "max_picks_per_26_weeks": 2}
+    history: dict[int, list[str]] = {}
     seen = []
     for week in weeks:
-        cands, ranked = recommend.candidates(con, week)
-        picked = recommend.mix(recommend.rank(cands, ranked, prefs, week, "9999"), prefs)
-        for i, b in enumerate(picked):
-            con.execute("INSERT INTO picks (pick_date, context, rank, business_id, score, reasons) VALUES (?, 'default', ?, ?, 0, '[]')",
-                        (week, i + 1, b["business_id"]))
+        cands = [place(i, picked_on=history.get(i, [])) for i in range(1, 31)]
+        picked = recommend.draw(cands, prefs, week, set())
+        for b in picked:
+            history.setdefault(b["business_id"], []).append(week)
         seen.append({b["business_id"] for b in picked})
-    # 30 places, 10 a week, 6-week cooldown: three weeks of entirely different lists.
-    assert not (seen[0] & seen[1]) and not (seen[1] & seen[2]) and not (seen[0] & seen[2])
+    # 30 places, 10 a week: three weeks of entirely different lists...
+    assert len(seen[0] | seen[1] | seen[2]) == 30
+    # ...then the pool is dry, and week 4 reuses week 1's places (rested longest), still 10 picks.
+    assert seen[3] == seen[0]
+
+
+def test_twice_in_26_weeks_sits_out():
+    b = place(1, picked_on=["2026-03-02", "2026-06-01"])
+    assert not recommend.rested(b, "2026-08-24", {"cooldown_weeks": 10, "max_picks_per_26_weeks": 2})
+    assert recommend.rested(b, "2026-09-07", {"cooldown_weeks": 10, "max_picks_per_26_weeks": 2})
 
 
 def test_michelin_snapshot_links_to_beli_ids():

@@ -32,7 +32,8 @@ export type Picks = {
   date: string // Monday of the week
   generated_on?: string
   candidates: number
-  contexts: Record<string, { prefs: Record<string, unknown>; picks: Pick[] }>
+  // pool: how many places pass the context's rules (older weeks' files don't have it).
+  contexts: Record<string, { prefs: Record<string, unknown>; pool?: number; picks: Pick[] }>
 }
 
 export type Index = {
@@ -65,6 +66,7 @@ export const api = {
 }
 
 export const price = (p: number | null) => (p ? '$'.repeat(p) : '—')
+
 // Where a place's Beli rating stands. review_count is null until the ratings pull reaches it, 0 when
 // nobody has rated it, and Beli withholds the score until a place has about 5 ratings.
 type Rated = { beli_score: number | null; review_count: number | null }

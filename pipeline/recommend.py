@@ -1,42 +1,33 @@
-"""Daily picks: score Singapore candidates and explain why each one made the cut.
+"""Weekly picks: a seeded random draw from the places that pass each context's rules.
 
-    score = Σ weight · component, each component in [0, 1]
+There is no ranking. A context is a set of hard rules (price range, distance from the origin,
+Beli score and rating-count bounds, cuisines to avoid, whether Beli's top 200 counts); every
+place that passes is equally likely. The draw is seeded by the week and context, so a re-run in
+the same week gives the same list and next week reshuffles.
 
-    fit       cuisine match (your explicit likes + what you rank highly), price vs budget
-    quality   Beli score shrunk toward the city mean when few people have rated it
-    novelty   newly surfaced, on Beli's popular-in-Singapore list, not picked recently
-    distance  decays with km from the origin; neutral when coordinates are unknown
-    social    how many friends rated it and how highly
+Rotation is the point, across weeks more than within one: a place picked in any context sits out
+every context for `cooldown_weeks`, and one picked `max_picks_per_26_weeks` times in the last 26
+weeks sits out until the oldest of those picks falls outside the window. Only when a context's
+pool runs dry does it reuse places on cooldown, longest-rested first. Contexts draw smallest
+pool first so the broad ones (Any Day) don't use up what the narrow ones need.
 
-Candidates are every open place in Beli's Singapore catalogue. Your own lists don't change the
-score: a pick you've ranked or bookmarked is only tagged as such. Chains (more than
-`max_outlets` branches under one name) and `cuisines_avoid` are filtered out.
-
-Picks are weekly. Each list mixes `popular_picks` places from Beli's popular-in-Singapore list
-with discoveries from the rest of the catalogue; discoveries must clear `min_beli_score` with at
-least `min_ratings` ratings, falling back to the best of the rest while scores are still filling
-in. So the list never goes stale, a place picked in any context sits out the next `COOLDOWN_WEEKS`
-weeks entirely, then returns with reduced novelty; a week-seeded jitter reshuffles near-ties, and
-selection is greedy with a penalty for repeating a cuisine or neighbourhood.
+Each list takes `popular_picks` places from Beli's popular-in-Singapore list and the rest from
+everywhere else, and keeps any cuisine or neighbourhood to `max_same_cuisine` /
+`max_same_neighbourhood` places. Your own lists never filter or boost; a pick you've ranked or
+bookmarked is only tagged. Chains (more than `max_outlets` branches) are left out.
 """
 
 import hashlib
 import math
+import random
 import re
 from collections import Counter, defaultdict
 from datetime import date, timedelta
 
 from .config import CLOSED_STATUSES
 
-WEIGHTS = {"fit": 0.30, "quality": 0.25, "novelty": 0.20, "distance": 0.15, "social": 0.10}
-# Big enough to reshuffle near-ties every week (most candidates sit within ~0.05 of each other),
-# small enough that a clearly better place still wins.
-JITTER = 0.06
-# A place picked in any context is kept out of every context for this many weeks after.
-COOLDOWN_WEEKS = 6
-PRIOR_STRENGTH = 30  # ratings needed before a place's own score outweighs the city mean
-REPEAT_PENALTY = 0.08  # per earlier pick sharing a cuisine or neighbourhood
 PRICE_SIGNS = {1: "$", 2: "$$", 3: "$$$", 4: "$$$$"}
+WINDOW_WEEKS = 26  # for max_picks_per_26_weeks
 
 
 def haversine_km(a_lat: float, a_lng: float, b_lat: float, b_lng: float) -> float:
@@ -46,9 +37,12 @@ def haversine_km(a_lat: float, a_lng: float, b_lat: float, b_lng: float) -> floa
     return 2 * 6371 * math.asin(math.sqrt(h))
 
 
-def jitter(day: str, business_id: int) -> float:
-    h = hashlib.sha256(f"{day}:{business_id}".encode()).digest()
-    return int.from_bytes(h[:4], "big") / 2**32
+def shuffled(items: list[dict], seed: str) -> list[dict]:
+    """A stable random order: the same seed always gives the same order."""
+    rng = random.Random(hashlib.sha256(seed.encode()).digest())
+    out = sorted(items, key=lambda b: b["business_id"])  # independent of input order
+    rng.shuffle(out)
+    return out
 
 
 def michelin() -> dict[int, int | str]:
@@ -96,105 +90,9 @@ def resolve_prefs(prefs: dict, context: str | None) -> dict:
     return out
 
 
-def taste_profile(ranked: list[dict]) -> dict[str, float]:
-    """Cuisine affinity in [-1, 1] from your own ranked scores: cuisines you score above your
-    personal average lean positive. Needs 2+ places per cuisine to count."""
-    scored = [(r["cuisines"], r["user_score"]) for r in ranked if r.get("user_score") is not None]
-    if len(scored) < 5:
-        return {}
-    mean = sum(s for _, s in scored) / len(scored)
-    by_cuisine = defaultdict(list)
-    for cuisines, s in scored:
-        for c in cuisines:
-            by_cuisine[c].append(s)
-    return {c: max(-1.0, min(1.0, (sum(v) / len(v) - mean) / 2)) for c, v in by_cuisine.items() if len(v) >= 2}
-
-
-def components(b: dict, prefs: dict, ctx: dict) -> tuple[dict[str, float], list[tuple[float, str]]]:
-    """(component scores, reasons as (strength, text)) for one candidate."""
-    reasons: list[tuple[float, str]] = []
-    cuisines = b["cuisines"]
-    likes = {c.lower() for c in prefs.get("cuisines_like", [])}
-    taste = ctx["taste"]
-
-    # fit
-    liked = [c for c in cuisines if c.lower() in likes]
-    learned = max((taste.get(c, 0.0) for c in cuisines), default=0.0)
-    cuisine_fit = 1.0 if liked else 0.5 + 0.5 * learned if cuisines else 0.4
-    if liked:
-        reasons.append((0.8, f"{liked[0]}, one of your go-to cuisines"))
-    elif learned > 0.25:
-        best = max(cuisines, key=lambda c: taste.get(c, 0.0))
-        reasons.append((0.6 + learned / 4, f"You rank {best} places above your average"))
-    budget = prefs.get("budget")
-    if b["price"] is None or budget is None:
-        price_fit = 0.6
-    elif b["price"] <= budget:
-        price_fit = 1.0
-        if b["price"] < budget:
-            reasons.append((0.3, f"{PRICE_SIGNS[b['price']]}, under your {PRICE_SIGNS[budget]} budget"))
-    else:
-        price_fit = max(0.0, 1 - 0.6 * (b["price"] - budget))
-    fit = 0.6 * cuisine_fit + 0.4 * price_fit
-
-    # quality
-    s, n = b["beli_score"], b["review_count"] or 0
-    if s is None:
-        quality = 0.45
-    else:
-        shrunk = (n * s + PRIOR_STRENGTH * ctx["city_mean"]) / (n + PRIOR_STRENGTH) if n else (s + ctx["city_mean"]) / 2
-        quality = max(0.0, min(1.0, (shrunk - 5) / 5))
-        if s >= 8:
-            count = f" from {n:,} ratings" if n else ""
-            reasons.append((0.4 + (s - 8) / 4, f"Beli {s:.1f}{count}"))
-
-    # novelty
-    novelty = 0.4
-    if b["first_seen"] >= ctx["recent_cutoff"]:
-        novelty = 0.8
-        reasons.append((0.5, f"New on Beli ({_fmt(b['first_seen'])})"))
-    if (m := michelin_label(b.get("michelin"))):
-        reasons.append((0.85, m))
-    if b["popular"]:
-        novelty = min(1.0, novelty + 0.15)
-        reasons.append((0.45, f"#{b['popular_rank']} on Beli's popular-in-Singapore list" if b["popular_rank"]
-                              else "On Beli's popular-in-Singapore list"))
-    if b["last_picked"]:
-        # Back from cooldown: novelty recovers over another few weeks rather than all at once.
-        days = (date.fromisoformat(ctx["today"]) - date.fromisoformat(b["last_picked"])).days
-        novelty *= min(1.0, days / (COOLDOWN_WEEKS * 7 * 2))
-
-    # distance
-    origin = prefs.get("origin")
-    if origin and b["lat"] is not None and b["lng"] is not None:
-        km = haversine_km(origin["lat"], origin["lng"], b["lat"], b["lng"])
-        distance = math.exp(-km / max(prefs.get("max_km") or 8, 1) * 1.5)
-        b["km"] = round(km, 1)
-        if km <= (prefs.get("max_km") or 8) / 2:
-            reasons.append((0.35, f"{km:.1f} km from {origin.get('label', 'you')}"))
-    else:
-        distance = 0.5
-
-    # social
-    friends, favg = b["friend_count"], b["friend_avg"]
-    social = 0.0
-    if friends:
-        social = min(1.0, math.log1p(friends) / math.log1p(10)) * (0.5 + 0.5 * ((favg or 7) - 5) / 5)
-        avg = f", avg {favg:.1f}" if favg else ""
-        reasons.append((0.4 + min(friends, 10) / 25, f"{friends} friend{'s' if friends > 1 else ''} rated it{avg}"))
-
-    comps = {"fit": fit, "quality": quality, "novelty": novelty, "distance": distance, "social": max(0.0, social)}
-    return comps, reasons
-
-
-def _fmt(day: str) -> str:
-    d = date.fromisoformat(day)
-    return f"{d.day} {d.strftime('%b')}"
-
-
 def candidates(con, week: str | None = None) -> tuple[list[dict], list[dict]]:
     """(candidate places, your ranked places). Every open Singapore place is a candidate,
-    including ones you've ranked; your lists only tag a pick and shape the taste profile."""
+    including ones you've ranked; your lists only tag a pick."""
     from . import db
 
     closed = ", ".join(f"'{s}'" for s in CLOSED_STATUSES)
@@ -204,10 +102,11 @@ def candidates(con, week: str | None = None) -> tuple[list[dict], list[dict]]:
     lists = defaultdict(dict)
     for r in con.execute("SELECT * FROM list_members WHERE list_type != 'catalogue'"):
         lists[r["business_id"]][r["list_type"]] = dict(r)
-    social = {r["business_id"]: dict(r) for r in con.execute("SELECT * FROM social")}
-    # Earlier weeks only, so regenerating this week (after a prefs edit) doesn't penalise its own picks.
-    last_pick = dict(con.execute("SELECT business_id, MAX(pick_date) FROM picks WHERE pick_date < ? GROUP BY business_id",
-                                 (week or "9999",)).fetchall())
+    # Earlier weeks only, so regenerating this week (after a prefs edit) doesn't count its own picks.
+    history = defaultdict(list)
+    for bid, day in con.execute("SELECT DISTINCT business_id, pick_date FROM picks WHERE pick_date < ? ORDER BY pick_date",
+                                (week or "9999",)):
+        history[bid].append(day)
 
     cands, ranked = [], []
     for b in rows:
@@ -221,82 +120,123 @@ def candidates(con, week: str | None = None) -> tuple[list[dict], list[dict]]:
         b["popular_rank"] = seen["popular"]["position"] + 1 if b["popular"] and seen["popular"]["position"] is not None else None
         b["outlets"] = outlets.get(b["name"], 1)
         b["michelin"] = guide.get(b["business_id"])
-        b["friend_count"] = social.get(b["business_id"], {}).get("friend_count") or 0
-        b["friend_avg"] = social.get(b["business_id"], {}).get("friend_avg")
-        b["last_picked"] = last_pick.get(b["business_id"])
+        b["picked_on"] = history.get(b["business_id"], [])  # earlier weeks it was picked, oldest first
         cands.append(b)
     return cands, ranked
 
 
-def rank(cands: list[dict], ranked: list[dict], prefs: dict, today: str, recent_cutoff: str) -> list[dict]:
-    """Every candidate scored, best first (before diversity selection)."""
-    scores = [b["beli_score"] for b in cands + ranked if b["beli_score"] is not None]
-    ctx = {
-        "today": today,
-        "recent_cutoff": recent_cutoff,
-        "city_mean": sum(scores) / len(scores) if scores else 7.0,
-        "taste": taste_profile(ranked),
-    }
+def eligible(b: dict, prefs: dict) -> bool:
+    """The context's hard rules. Everything that passes is an equally good candidate."""
     avoid = {c.lower() for c in prefs.get("cuisines_avoid", [])}
-    max_outlets = prefs.get("max_outlets")
-    out = []
-    cooldown = (date.fromisoformat(today) - timedelta(weeks=COOLDOWN_WEEKS)).isoformat()
+    if any(c.lower() in avoid for c in b["cuisines"]):
+        return False
+    if prefs.get("max_outlets") and b["outlets"] > prefs["max_outlets"]:
+        return False
+    if b["price"] is None:
+        if not prefs.get("include_unpriced", True):
+            return False
+    elif not prefs.get("price_min", 1) <= b["price"] <= prefs.get("price_max", 4):
+        return False
+    s, n = b["beli_score"], b["review_count"] or 0
+    if s is None or s < prefs.get("min_beli_score", 0):
+        return False
+    if not prefs.get("min_ratings", 0) <= n <= prefs.get("max_ratings", math.inf):
+        return False
+    if prefs.get("exclude_popular") and b["popular"]:
+        return False
+    if prefs.get("min_km") or prefs.get("max_km"):
+        if b.get("km") is None:
+            return False
+        if not prefs.get("min_km", 0) <= b["km"] <= prefs.get("max_km", math.inf):
+            return False
+    return True
+
+
+def with_distance(cands: list[dict], prefs: dict) -> list[dict]:
+    origin = prefs.get("origin")
     for b in cands:
-        if any(c.lower() in avoid for c in b["cuisines"]):
-            continue
-        if b["last_picked"] and b["last_picked"] > cooldown:
-            continue
-        if max_outlets and b["outlets"] > max_outlets:
-            continue
-        b = dict(b)
-        comps, reasons = components(b, prefs, ctx)
-        total = sum(WEIGHTS[k] * v for k, v in comps.items()) + JITTER * jitter(today, b["business_id"])
-        reasons.sort(key=lambda r: -r[0])
-        out.append({**b, "score": round(total, 4), "components": {k: round(v, 3) for k, v in comps.items()},
-                    "reasons": [text for _, text in reasons[:3]] or ["A solid Singapore option you haven't tried"]})
-    out.sort(key=lambda r: -r["score"])
+        b["km"] = (round(haversine_km(origin["lat"], origin["lng"], b["lat"], b["lng"]), 1)
+                   if origin and b["lat"] is not None and b["lng"] is not None else None)
+    return cands
+
+
+def rested(b: dict, week: str, prefs: dict) -> bool:
+    """Out of cooldown: not picked in the last `cooldown_weeks`, and not picked
+    `max_picks_per_26_weeks` times in the last 26 weeks."""
+    if not b["picked_on"]:
+        return True
+    w = date.fromisoformat(week)
+    since = lambda weeks: (w - timedelta(weeks=weeks)).isoformat()
+    if b["picked_on"][-1] > since(prefs.get("cooldown_weeks", 10)):
+        return False
+    cap = prefs.get("max_picks_per_26_weeks")
+    return not cap or sum(d > since(WINDOW_WEEKS) for d in b["picked_on"]) < cap
+
+
+def reasons(b: dict, prefs: dict) -> list[str]:
+    """Plain facts about why it fits, for the card; never used to choose."""
+    out = []
+    if (m := michelin_label(b.get("michelin"))):
+        out.append(m)
+    if b["popular"]:
+        out.append(f"#{b['popular_rank']} on Beli's popular-in-Singapore list" if b["popular_rank"]
+                   else "On Beli's popular-in-Singapore list")
+    if b["beli_score"] is not None:
+        out.append(f"Beli {b['beli_score']:.1f} from {b['review_count'] or 0:,} ratings")
+    if prefs.get("max_ratings") and not b["popular"]:
+        out.append("Well rated, still under the radar")
+    if b.get("km") is not None and (prefs.get("min_km") or prefs.get("max_km")):
+        out.append(f"{b['km']:.1f} km from {prefs['origin'].get('label', 'the origin')}")
     return out
 
 
-def is_good(b: dict, prefs: dict) -> bool:
-    """A discovery worth recommending on Beli's own evidence, not just on fit and distance."""
-    return (b["beli_score"] is not None and b["beli_score"] >= prefs.get("min_beli_score", 0)
-            and (b["review_count"] or 0) >= prefs.get("min_ratings", 0))
-
-
-def mix(scored: list[dict], prefs: dict) -> list[dict]:
-    """`popular_picks` from Beli's popular list, the rest discoveries from the wider catalogue.
-    Discoveries that clear the quality bar go first; if there aren't enough yet, the best of the
-    rest fill in, and so does the other pool when one runs short."""
+def draw(cands: list[dict], prefs: dict, week: str, taken: set[int]) -> list[dict]:
+    """This week's list for one context. `taken` holds places already drawn this week by other
+    contexts; they count as picked (the cooldown is shared)."""
     k = int(prefs.get("picks", 10))
-    n_pop = min(int(prefs.get("popular_picks", 0)), k)
-    popular = [b for b in scored if b["popular"]]
-    others = [b for b in scored if not b["popular"]]
-    picked = select(popular, n_pop)
-    good = [b for b in others if is_good(b, prefs)]
-    picked += select(good, k - len(picked), picked)
-    # Short on proven discoveries (scores still filling in): keep the split, best of the rest first.
-    for pool in ([b for b in others if not is_good(b, prefs)], scored):
-        if len(picked) < k:
-            ids = {p["business_id"] for p in picked}
-            picked += select([b for b in pool if b["business_id"] not in ids], k - len(picked), picked)
-    for p in picked:
-        p["pool"] = "popular" if p["popular"] else "discover"
-    return sorted(picked, key=lambda b: -b["score"])
+    pool = [b for b in cands if eligible(b, prefs) and b["business_id"] not in taken]
+    order = shuffled(pool, f"{week}:{prefs.get('context') or 'default'}")
+    fresh = [b for b in order if rested(b, week, prefs)]
+    # Pool ran dry: reuse places on cooldown, longest-rested first.
+    reuse = sorted((b for b in order if not rested(b, week, prefs)), key=lambda b: b["picked_on"][-1])
 
-
-def select(scored: list[dict], k: int, already: list[dict] | None = None) -> list[dict]:
-    """Greedy pick with a penalty for repeating a cuisine or neighbourhood (including `already`)."""
+    max_cuisine = prefs.get("max_same_cuisine", 2)
+    max_hood = prefs.get("max_same_neighbourhood", 2)
     picked: list[dict] = []
-    prior = already or []
-    pool = scored[: max(k * 8, 50)]
-    while pool and len(picked) < k:
-        def adjusted(b):
-            overlap = sum(
-                bool(set(b["cuisines"]) & set(p["cuisines"])) + (b["neighborhood"] is not None and b["neighborhood"] == p["neighborhood"])
-                for p in prior + picked)
-            return b["score"] - REPEAT_PENALTY * overlap
-        best = max(pool, key=adjusted)
-        picked.append(best)
-        pool.remove(best)
-    return picked
+    ids: set[int] = set()
+    cuisines, hoods = Counter(), Counter()
+
+    def take(source: list[dict], want: int, strict: bool) -> None:
+        for b in source:
+            if want <= 0 or len(picked) >= k:
+                return
+            if b["business_id"] in ids:
+                continue
+            if strict and (any(cuisines[c] >= max_cuisine for c in b["cuisines"])
+                           or (b["neighborhood"] and hoods[b["neighborhood"]] >= max_hood)):
+                continue
+            picked.append(b)
+            ids.add(b["business_id"])
+            cuisines.update(b["cuisines"])
+            if b["neighborhood"]:
+                hoods[b["neighborhood"]] += 1
+            want -= 1
+
+    n_pop = min(int(prefs.get("popular_picks", 0)), k)
+    for source in (fresh, reuse):
+        for strict in (True, False):  # variety rules give way before the list comes up short
+            take([b for b in source if b["popular"]], n_pop - sum(b["popular"] for b in picked), strict)
+            take([b for b in source if not b["popular"]], k - len(picked), strict)
+            take(source, k - len(picked), strict)  # one half ran short: the other fills in
+
+    out = []
+    for b in picked:
+        b = dict(b)
+        b["pool"] = "popular" if b["popular"] else "discover"
+        b["reasons"] = reasons(b, prefs)
+        out.append(b)
+    return sorted(out, key=lambda b: (-(b["beli_score"] or 0), b["name"]))
+
+
+def pool_size(cands: list[dict], prefs: dict) -> int:
+    return sum(eligible(b, prefs) for b in cands)

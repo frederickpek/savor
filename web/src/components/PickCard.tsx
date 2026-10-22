@@ -7,7 +7,8 @@ import ScoreRing from './ScoreRing'
 type Props = { pick: Pick; rank: number; selected: boolean; onSelect: () => void }
 
 // The score ring and the Popular chip already say these; don't repeat them as reasons.
-const redundant = (r: string) => /^Beli \d/.test(r) || /on Beli's popular-in-Singapore list$/i.test(r) || /^(\d MICHELIN Stars?|MICHELIN Bib Gourmand)$/.test(r)
+// Facts the card already shows elsewhere (score ring, badges, the km in the meta line).
+const redundant = (r: string) => /^Beli \d/.test(r) || /^\d+(\.\d)? km from /.test(r) || /on Beli's popular-in-Singapore list$/i.test(r) || /^(\d MICHELIN Stars?|MICHELIN Bib Gourmand)$/.test(r)
 
 export default function PickCard({ pick: p, rank, selected, onSelect }: Props) {
   const ref = useRef<HTMLLIElement>(null)

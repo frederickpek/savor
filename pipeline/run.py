@@ -126,32 +126,34 @@ def week_of(day: str) -> str:
     return (d - timedelta(days=d.weekday())).isoformat()
 
 
-def build_picks(con, prefs: dict, today: str) -> tuple[dict, dict[str, dict[int, float]]]:
-    """(public picks JSON, {context: {business_id: internal score}}) for the week containing today."""
+def build_picks(con, prefs: dict, today: str) -> dict:
+    """Public picks JSON for the week containing today: one seeded draw per context."""
     week = week_of(today)
-    cands, ranked = recommend.candidates(con, week)
-    recent = (date.fromisoformat(today) - timedelta(days=7)).isoformat()
-    # Everything is "new" on the first day of history, so only count places first seen after it.
-    first_day = con.execute("SELECT MIN(first_seen) FROM businesses").fetchone()[0] or today
-    recent = max(recent, (date.fromisoformat(first_day) + timedelta(days=1)).isoformat())
+    cands, _ = recommend.candidates(con, week)
     contexts = {"default": None, **{c: c for c in prefs.get("contexts", {})}}
-    out, scores = {}, {}
-    for name, ctx in contexts.items():
-        p = recommend.resolve_prefs(prefs, ctx)
-        # Seeded by the week, so re-running mid-week gives the same list unless data or prefs changed.
-        scored = recommend.rank(cands, ranked, p, week, recent)
-        picks = recommend.mix(scored, p)
-        scores[name] = {b["business_id"]: b["score"] for b in picks}
+    resolved = {name: recommend.resolve_prefs(prefs, ctx) for name, ctx in contexts.items()}
+    pools = {}
+    for name, p in resolved.items():
+        pools[name] = recommend.pool_size(recommend.with_distance(cands, p), p)
+    # Smallest pool draws first, so the broad contexts don't use up what the narrow ones need; a
+    # place drawn by one context is taken for the rest of the week (the cooldown is shared).
+    drawn, taken = {}, set()
+    for name in sorted(resolved, key=lambda n: pools[n]):
+        p = resolved[name]
+        drawn[name] = recommend.draw(recommend.with_distance(cands, p), p, week, taken)
+        taken |= {b["business_id"] for b in drawn[name]}
+    out = {}
+    for name, p in resolved.items():  # published in prefs.json order
         out[name] = {
             "prefs": {k: v for k, v in p.items() if k != "contexts"},
+            "pool": pools[name],
             "picks": [{
-                # Internal score breakdown stays in savor.db; the public JSON carries reasons only.
                 **place_json(b), "km": b.get("km"), "reasons": b["reasons"],
                 "bookmarked": bool(b["bookmarked_on"]), "ranked_score": b["ranked_score"], "pool": b["pool"],
                 "popular_rank": b["popular_rank"], "michelin": b["michelin"],
-            } for b in picks],
+            } for b in drawn[name]],
         }
-    return {"date": week, "generated_on": today, "candidates": len(cands), "contexts": out}, scores
+    return {"date": week, "generated_on": today, "candidates": len(cands), "contexts": out}
 
 
 def main() -> None:
@@ -207,14 +209,14 @@ def main() -> None:
     week = week_of(today)
     existing = _read(api / "picks" / f"{week}.json", None)
     regenerate = existing is None or ((args.skip_ingest or args.fixtures is not None) and not args.keep_picks)
-    picks, scores = build_picks(con, prefs, today)
+    picks = build_picks(con, prefs, today)
     if regenerate:
         # Every context's picks, so the cooldown keeps a place out of all of them next weeks.
         con.execute("DELETE FROM picks WHERE pick_date = ?", (week,))
         for ctx, c in picks["contexts"].items():
             for i, b in enumerate(c["picks"]):
-                con.execute("INSERT INTO picks (pick_date, context, rank, business_id, score, reasons) VALUES (?, ?, ?, ?, ?, ?)",
-                            (week, ctx, i + 1, b["business_id"], scores[ctx][b["business_id"]], json.dumps(b["reasons"])))
+                con.execute("INSERT INTO picks (pick_date, context, rank, business_id, score, reasons) VALUES (?, ?, ?, ?, 0, ?)",
+                            (week, ctx, i + 1, b["business_id"], json.dumps(b["reasons"])))
     else:
         picks = existing
         # Ratings fill in daily; refresh them on this week's picks without reshuffling.
