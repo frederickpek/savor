@@ -67,17 +67,18 @@ def to_int(v: Any) -> int | None:
 
 
 def price_tier(b: dict) -> int | None:
-    """1-4 ($ to $$$$) from `price`, falling back to `price_key`."""
-    for v in (b.get("price"), b.get("price_key")):
-        if v is None:
-            continue
-        if isinstance(v, (int, float)) and not isinstance(v, bool):
-            return int(v) if 1 <= v <= 4 else None
-        s = str(v)
-        if s.count("$"):
-            return min(s.count("$"), 4)
-        if m := re.search(r"[1-4]", s):
-            return int(m.group())
+    """1-4 ($ to $$$$) from `price`. Not from `price_key`: Beli sends "$" there for every place
+    without a price (about half of Singapore), so it would turn "unknown" into "cheap"."""
+    v = b.get("price")
+    if v is None or isinstance(v, bool):
+        return None
+    if isinstance(v, (int, float)):
+        return int(v) if 1 <= v <= 4 else None
+    s = str(v)
+    if s.count("$"):
+        return min(s.count("$"), 4)
+    if m := re.search(r"[1-4]", s):
+        return int(m.group())
     return None
 
 

@@ -105,8 +105,29 @@ def connect(path: Path) -> sqlite3.Connection:
         """)
     if con.execute("SELECT 1 FROM sqlite_master WHERE name = 'sightings'").fetchone():
         migrate_sightings(con)
+    if con.execute("PRAGMA user_version").fetchone()[0] < 1 and "price" in cols:
+        reset_prices(con, path.parent / "snapshots")
+        con.execute("PRAGMA user_version = 1")
     con.commit()
     return con
+
+
+def reset_prices(con: sqlite3.Connection, snapshots: Path) -> None:
+    """Older runs read Beli's placeholder `price_key: "$"` as a real price, so ~9k unpriced places
+    were stored as $. Since upserts never overwrite with NULL, re-derive every price from the
+    latest raw catalogue (or clear them all, to be refilled by the next catalogue fetch)."""
+    import gzip
+
+    from . import normalize
+
+    con.execute("UPDATE businesses SET price = NULL")
+    latest = max(snapshots.glob("*/catalogue.json.gz"), default=None)
+    if latest is None:
+        return
+    with gzip.open(latest, "rt") as f:
+        rows = [normalize.business_of(r) or r for r in normalize.records(json.load(f))]
+    con.executemany("UPDATE businesses SET price = ? WHERE business_id = ?",
+                    [(p, r["id"]) for r in rows if (p := normalize.price_tier(r)) is not None and "id" in r])
 
 
 def migrate_sightings(con: sqlite3.Connection) -> None:

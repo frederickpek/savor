@@ -36,7 +36,7 @@ def test_records_handles_every_envelope():
 
 
 def test_business_normalizes_drifted_fields():
-    row = normalize.business({"id": "7", "name": " Odette ", "price_key": "$$$$", "lat": "1.29",
+    row = normalize.business({"id": "7", "name": " Odette ", "price": "$$$$", "price_key": "$", "lat": "1.29",
                               "cuisines": [{"name": "French"}, "French"], "avg_score": 9.1})
     assert row["business_id"] == 7 and row["name"] == "Odette"
     assert row["price"] == 4 and row["lat"] == 1.29 and row["cuisines"] == ["French"]
@@ -323,3 +323,9 @@ def test_score_queue_backfills_missing_histograms_first(tmp_path):
     db.set_fields(con, 4, count_fetched_on="2026-09-01", review_count=3, in_sg=1)  # unscored: no backfill
     order = [r["business_id"] for r in ingest.score_queue(con, "2026-10-22")]
     assert order == [2, 3, 4, 1]
+
+
+def test_price_key_placeholder_is_not_a_price():
+    # Beli sends price_key "$" for every unpriced place; only `price` counts.
+    assert normalize.price_tier({"price": None, "price_key": "$"}) is None
+    assert normalize.price_tier({"price": 2, "price_key": "$"}) == 2
