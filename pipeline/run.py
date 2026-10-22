@@ -97,7 +97,7 @@ def prune(con, out: Path, today: str) -> None:
 # places.json is ~18k rows, so it ships as {cols, rows} (about 1.5 MB, 0.5 MB gzipped)
 # instead of one object per place.
 CATALOGUE_COLS = ("business_id", "name", "neighborhood", "lat", "lng", "price", "cuisines",
-                  "beli_score", "review_count", "website", "popular_rank", "michelin")
+                  "beli_score", "review_count", "website", "popular_rank", "michelin", "histogram")
 
 
 def catalogue_json(con) -> dict:
@@ -110,14 +110,20 @@ def catalogue_json(con) -> dict:
     for b in rows:
         b["popular_rank"] = ranks.get(b["business_id"])
         b["michelin"] = guide.get(b["business_id"])
+        b["histogram"] = histogram_of(b)
     rows.sort(key=lambda b: (b["beli_score"] is None, -(b["beli_score"] or 0), b["name"]))
     return {"cols": list(CATALOGUE_COLS), "rows": [
         [round(b[c], 5) if c in ("lat", "lng") else b[c] for c in CATALOGUE_COLS] for b in rows]}
 
 
+def histogram_of(b: dict) -> list[int] | None:
+    """The 20 rating counts as a list, or None when it isn't known or Beli hides it."""
+    return json.loads(b["histogram"]) or None if b.get("histogram") else None
+
+
 def place_json(b: dict) -> dict:
     keys = ("business_id", "name", "address", "neighborhood", "lat", "lng", "price", "cuisines", "beli_score", "review_count", "website")
-    return {k: b.get(k) for k in keys}
+    return {**{k: b.get(k) for k in keys}, "histogram": histogram_of(b)}
 
 
 def week_of(day: str) -> str:
@@ -224,7 +230,7 @@ def main() -> None:
         for c in picks["contexts"].values():
             for p in c["picks"]:
                 if (b := fresh.get(p["business_id"])):
-                    p.update({k: b[k] for k in ("beli_score", "review_count", "price", "cuisines")})
+                    p.update({k: b[k] for k in ("beli_score", "review_count", "price", "cuisines")}, histogram=histogram_of(b))
     if not args.skip_ingest:
         con.execute("UPDATE runs SET finished_at = ?, status = ?, api_calls = ?, summary = ? WHERE run_on = ?",
                     (datetime.now(timezone.utc).isoformat(), status, summary["api_calls"], json.dumps(summary), today))

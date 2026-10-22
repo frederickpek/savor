@@ -1,12 +1,12 @@
-import { Bookmark, Check, Globe, Navigation } from 'lucide-react'
+import { Bookmark, Check } from 'lucide-react'
 import { useEffect, useRef } from 'react'
-import { type Pick, mapsUrl, price, ratingsLabel } from '../lib/api'
+import { type Pick, price, ratingsLabel } from '../lib/api'
 import Badges from './Badges'
+import PlaceDetails from './PlaceDetails'
 import ScoreRing from './ScoreRing'
 
 type Props = { pick: Pick; rank: number; selected: boolean; onSelect: () => void }
 
-// The score ring and the Popular chip already say these; don't repeat them as reasons.
 // Facts the card already shows elsewhere (score ring, badges, the km in the meta line).
 const redundant = (r: string) => /^Beli \d/.test(r) || /^\d+(\.\d)? km from /.test(r) || /on Beli's popular-in-Singapore list$/i.test(r) || /^(\d MICHELIN Stars?|MICHELIN Bib Gourmand)$/.test(r)
 
@@ -60,30 +60,7 @@ export default function PickCard({ pick: p, rank, selected, onSelect }: Props) {
             ))}
           </ul>
 
-          {selected && (
-            <div className="mt-4 space-y-3">
-              <div className="flex flex-wrap gap-2" onClick={(e) => e.stopPropagation()}>
-                <a
-                  href={mapsUrl(p)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-teal px-3.5 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-teal-hover"
-                >
-                  <Navigation className="size-3.5" strokeWidth={2.5} /> Directions
-                </a>
-                {p.website && (
-                  <a
-                    href={p.website}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3.5 py-1.5 text-sm font-semibold text-ink transition-colors hover:border-teal-bright hover:text-teal"
-                  >
-                    <Globe className="size-3.5" strokeWidth={2.5} /> Website
-                  </a>
-                )}
-              </div>
-            </div>
-          )}
+          {selected && <PlaceDetails place={p} />}
         </div>
         <ScoreRing score={p.beli_score} count={p.review_count} />
       </div>

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { type Place, price, ratingsLabel } from '../lib/api'
 import Badges from './Badges'
 import PanelHeader from './PanelHeader'
+import PlaceDetails from './PlaceDetails'
 import ScoreRing from './ScoreRing'
 
 export type Filters = { prices: number[]; cuisines: string[]; q: string; scoredOnly: boolean }
@@ -70,6 +71,11 @@ export default function Catalogue({ mode, places: all, filters: f, onFilters, se
   const stars = useMemo(() => [3, 2, 1].map((n) => [n, places.filter((p) => starsOf(p) === n).length] as const), [places])
   const [shown, setShown] = useState(PAGE)
   const list = useRef<HTMLDivElement>(null)
+  // The open row, so a place picked on the map scrolls into view here.
+  const openRow = useRef<HTMLLIElement>(null)
+  useEffect(() => {
+    if (selected != null) openRow.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [selected])
 
   const cuisines = useMemo(() => {
     const n = new Map<string, number>()
@@ -163,11 +169,16 @@ export default function Catalogue({ mode, places: all, filters: f, onFilters, se
       <div className="px-2 pt-4 pb-10">
         {results.length ? (
           <ul className="grid gap-x-2 xl:grid-cols-2">
-            {results.slice(0, shown).map((p) => (
-              <li key={p.business_id}>
+            {results.slice(0, shown).map((p) => {
+              const open = p.business_id === selected
+              return (
+              // Selected rows expand downward in their own column (directions, website, ratings breakdown).
+              <li key={p.business_id} ref={open ? openRow : undefined}
+                className={`self-start rounded-xl transition-colors ${open ? 'bg-teal-softer ring-1 ring-teal-soft' : 'hover:bg-panel'}`}>
                 <button
                   onClick={() => onSelect(p.business_id)}
-                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors ${p.business_id === selected ? 'bg-teal-softer ring-1 ring-teal-soft' : 'hover:bg-panel'}`}
+                  aria-expanded={open}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left"
                 >
                   {top && (
                     <span className="w-9 shrink-0 text-right text-[15px] font-extrabold tabular-nums text-teal">#{p.popular_rank}</span>
@@ -184,8 +195,10 @@ export default function Catalogue({ mode, places: all, filters: f, onFilters, se
                   </div>
                   <ScoreRing score={p.beli_score} count={p.review_count} size={34} />
                 </button>
+                {open && <div className={`pb-4 pr-3 ${top ? 'pl-[60px]' : 'pl-3'}`}><PlaceDetails place={p} /></div>}
               </li>
-            ))}
+              )
+            })}
           </ul>
         ) : (
           <p className="px-3 py-8 text-center text-sm text-muted">No places match these filters. Try removing one.</p>

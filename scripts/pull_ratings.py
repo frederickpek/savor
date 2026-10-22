@@ -27,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from pipeline import beli as beli_mod  # noqa: E402
 from pipeline import db, ingest  # noqa: E402
 from pipeline.beli import RateLimited  # noqa: E402
-from pipeline.run import SGT, _write, catalogue_json, connect_beli, load_env, week_of  # noqa: E402
+from pipeline.run import SGT, _write, catalogue_json, connect_beli, histogram_of, load_env, week_of  # noqa: E402
 
 BACKOFF = (60, 180, 600)  # seconds; three tries after a 429
 LONG_PAUSE = 1800  # after all three, wait this long and start over
@@ -78,7 +78,7 @@ def publish(con, out: Path, today: str) -> None:
         for c in picks["contexts"].values():
             for p in c["picks"]:
                 if (b := fresh.get(p["business_id"])):
-                    p.update({k: b[k] for k in ("beli_score", "review_count")})
+                    p.update({k: b[k] for k in ("beli_score", "review_count")}, histogram=histogram_of(b))
         _write(path, picks)
     say(f"  published {api / 'places.json'} and this week's picks")
 

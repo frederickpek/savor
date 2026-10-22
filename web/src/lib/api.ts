@@ -16,6 +16,8 @@ export type Place = {
   popular_rank?: number | null
   // MICHELIN Guide Singapore (hand-maintained snapshot): 1-3 stars, or 'bib' for Bib Gourmand.
   michelin?: 1 | 2 | 3 | 'bib' | null
+  // Beli's rating counts in 20 half-point buckets from 0 to 10; null until fetched, or below ~5 ratings.
+  histogram?: number[] | null
 }
 
 export type Pick = Place & {
