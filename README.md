@@ -39,8 +39,15 @@ One-time setup:
 - **Settings → Pages → Source:** GitHub Actions
 - **Settings → Actions → General → Workflow permissions:** Read and write
 
-To pull ratings faster than the schedule, run `scripts/pull_ratings.py` locally (Ctrl-C to stop, it
-resumes where it left off), then push `data/` to the `data` branch before the next scheduled run.
+To pull ratings faster than the schedule, run them locally:
+
+```bash
+.venv/bin/python scripts/data_branch.py pull   # data branch -> data/
+.venv/bin/python scripts/pull_ratings.py       # Ctrl-C to stop; it resumes where it left off
+.venv/bin/python scripts/data_branch.py push   # data/ -> data branch; the site updates on the next run
+```
+
+Both sync commands merge ratings by fetch date, so a scheduled run that lands in between loses nothing.
 
 ## Local development
 

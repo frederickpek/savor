@@ -131,7 +131,7 @@ def score_queue(con, today: str) -> list[dict]:
     con.execute("DELETE FROM guide")
     con.executemany("INSERT OR IGNORE INTO guide VALUES (?)", [(b,) for b in michelin()])
     return [dict(r) for r in con.execute(
-        """SELECT b.business_id, b.beli_score FROM businesses b
+        """SELECT b.business_id, b.beli_score, b.count_fetched_on FROM businesses b
            WHERE b.in_sg = 1 AND COALESCE(b.status, '') NOT IN ('CLOSED', 'PERMANENTLY_CLOSED', 'CLOSED_PERMANENTLY')
            ORDER BY
              b.count_fetched_on IS NOT NULL,

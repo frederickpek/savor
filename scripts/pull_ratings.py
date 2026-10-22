@@ -117,7 +117,9 @@ def main() -> None:
     ranks = dict(con.execute(
         "SELECT business_id, MIN(position) + 1 FROM sightings WHERE list_type = 'popular' GROUP BY business_id").fetchall())
     total = len(todo)
-    say(f"{total:,} places queued · {args.interval:g}s between requests · saving every {args.batch} places · Ctrl-C to stop")
+    fresh = sum(r["count_fetched_on"] is None for r in todo)
+    say(f"{total:,} places queued: {fresh:,} with no data yet, then {total - fresh:,} already fetched (stalest first)")
+    say(f"{args.interval:g}s between requests · saving every {args.batch} places · Ctrl-C to stop")
 
     done = scored = batch_scored = 0
     started = time.monotonic()
@@ -125,7 +127,8 @@ def main() -> None:
     while i < total and not stop:
         bid = todo[i]["business_id"]
         tag = f" (Top 200 #{ranks[bid]})" if bid in ranks else ""
-        say(f"[{i + 1:,}/{total:,}] {names.get(bid, bid)}{tag}  id={bid}")
+        refresh = "" if todo[i]["count_fetched_on"] is None else f"  (refresh, last {todo[i]['count_fetched_on']})"
+        say(f"[{i + 1:,}/{total:,}] {names.get(bid, bid)}{tag}  id={bid}{refresh}")
         fields = None
         for attempt in range(len(BACKOFF) + 1):
             try:
