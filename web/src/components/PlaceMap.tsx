@@ -1,9 +1,10 @@
 import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
-import type { FeatureCollection } from 'geojson'
+import type { Feature, FeatureCollection } from 'geojson'
 import { useEffect, useRef, useState } from 'react'
 import { type Pick, type Place, mapsUrl, price, ratingsLabel } from '../lib/api'
+import type { Ring } from '../lib/geo'
 import { googleStyle } from '../lib/mapStyle'
 import { scoreTone } from './ScoreRing'
 
@@ -25,6 +26,10 @@ type Props = {
   onSelect: (id: number) => void
   // What the camera frames when the inputs change.
   fitTo: 'picks' | 'dots'
+  // The drawn area, outlined on the map. While `drawing`, dragging traces a new one instead of panning.
+  area?: Ring | null
+  drawing?: boolean
+  onArea?: (ring: Ring) => void
 }
 
 // lucide ArrowUpRight, inlined because popups are HTML strings.
@@ -53,6 +58,14 @@ function popupHtml(p: Place) {
     </div>${score}</div>`
 }
 
+function areaGeoJSON(ring: [number, number][] | null | undefined, closed: boolean): FeatureCollection {
+  if (!ring || ring.length < 2) return { type: 'FeatureCollection', features: [] }
+  const f: Feature = closed && ring.length >= 3
+    ? { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [[...ring, ring[0]]] } }
+    : { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: ring } }
+  return { type: 'FeatureCollection', features: [f] }
+}
+
 function dotsGeoJSON(dots: Place[], skip: Set<number>): FeatureCollection {
   return {
     type: 'FeatureCollection',
@@ -64,7 +77,7 @@ function dotsGeoJSON(dots: Place[], skip: Set<number>): FeatureCollection {
 
 // MapLibre with keyless vector tiles, styled to read like Google Maps. Picks are DOM pins so they
 // share the app's CSS; everything else is a circle layer.
-export default function PlaceMap({ picks, dots, selected, onSelect, fitTo }: Props) {
+export default function PlaceMap({ picks, dots, selected, onSelect, fitTo, area, drawing = false, onArea }: Props) {
   const el = useRef<HTMLDivElement>(null)
   const map = useRef<maplibregl.Map | null>(null)
   const pins = useRef(new Map<number, { marker: maplibregl.Marker; node: HTMLElement }>())
@@ -72,6 +85,10 @@ export default function PlaceMap({ picks, dots, selected, onSelect, fitTo }: Pro
   const byId = useRef(new Map<number, Place>())
   const onSelectRef = useRef(onSelect)
   onSelectRef.current = onSelect
+  const onAreaRef = useRef(onArea)
+  onAreaRef.current = onArea
+  const drawingRef = useRef(drawing)
+  drawingRef.current = drawing
   const [ready, setReady] = useState(false)
   const [failed, setFailed] = useState(false)
 
@@ -98,6 +115,13 @@ export default function PlaceMap({ picks, dots, selected, onSelect, fitTo }: Pro
         m.on('load', () => {
           // Compact attribution opens itself on first load; Google keeps it as a small chip.
           el.current?.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show')
+          // The drawn area sits under the dots: a light wash and a teal outline.
+          m.addSource('area', { type: 'geojson', data: areaGeoJSON(null, true) })
+          m.addLayer({ id: 'area-fill', type: 'fill', source: 'area', filter: ['==', ['geometry-type'], 'Polygon'],
+            paint: { 'fill-color': TEAL_BRIGHT, 'fill-opacity': 0.08 } })
+          m.addLayer({ id: 'area-line', type: 'line', source: 'area',
+            layout: { 'line-join': 'round', 'line-cap': 'round' },
+            paint: { 'line-color': TEAL_BRIGHT, 'line-width': 2.5 } })
           m.addSource('dots', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } })
           m.addLayer({
             id: 'dots',
@@ -111,6 +135,7 @@ export default function PlaceMap({ picks, dots, selected, onSelect, fitTo }: Pro
             },
           })
           m.on('click', 'dots', (e) => {
+            if (drawingRef.current) return
             const id = e.features?.[0]?.id
             if (typeof id === 'number') onSelectRef.current(id)
           })
@@ -164,6 +189,75 @@ export default function PlaceMap({ picks, dots, selected, onSelect, fitTo }: Pro
     })
     if (!bounds.isEmpty()) m.fitBounds(bounds, { padding, maxZoom: 14.5, duration: 600 })
   }, [picks, dots, ready, fitTo])
+
+  // Show the current area whenever it changes (and not mid-stroke, which draws its own line).
+  useEffect(() => {
+    const m = map.current
+    if (!m || !ready) return
+    ;(m.getSource('area') as maplibregl.GeoJSONSource).setData(areaGeoJSON(area, true))
+  }, [area, ready])
+
+  // Drawing: drag (mouse, pen or finger) to trace a loop; letting go closes it. Panning is off meanwhile.
+  useEffect(() => {
+    const m = map.current
+    if (!m || !ready || !drawing) return
+    const box = m.getCanvasContainer()
+    const canvas = m.getCanvas()
+    const src = m.getSource('area') as maplibregl.GeoJSONSource
+    m.dragPan.disable()
+    m.doubleClickZoom.disable()
+    m.touchZoomRotate.disable()
+    canvas.style.cursor = 'crosshair'
+    box.style.touchAction = 'none'
+    popup.current?.remove()
+
+    let stroke: [number, number][] | null = null
+    let last: { x: number; y: number } | null = null
+    const at = (e: PointerEvent) => {
+      const r = box.getBoundingClientRect()
+      return { x: e.clientX - r.left, y: e.clientY - r.top }
+    }
+    const down = (e: PointerEvent) => {
+      if (e.button !== 0) return
+      box.setPointerCapture(e.pointerId)
+      last = at(e)
+      const ll = m.unproject([last.x, last.y])
+      stroke = [[ll.lng, ll.lat]]
+    }
+    const move = (e: PointerEvent) => {
+      if (!stroke || !last) return
+      const pt = at(e)
+      // Skip points closer than a few pixels: smoother outline, far fewer vertices.
+      if (Math.hypot(pt.x - last.x, pt.y - last.y) < 4) return
+      last = pt
+      const ll = m.unproject([pt.x, pt.y])
+      stroke.push([ll.lng, ll.lat])
+      src.setData(areaGeoJSON(stroke, false))
+    }
+    const up = () => {
+      const ring = stroke
+      stroke = last = null
+      // A tap or a scribble too small to enclose anything keeps the previous area.
+      if (ring && ring.length >= 6) onAreaRef.current?.(ring)
+      else src.setData(areaGeoJSON(area, true))
+    }
+    box.addEventListener('pointerdown', down)
+    box.addEventListener('pointermove', move)
+    box.addEventListener('pointerup', up)
+    box.addEventListener('pointercancel', up)
+    return () => {
+      box.removeEventListener('pointerdown', down)
+      box.removeEventListener('pointermove', move)
+      box.removeEventListener('pointerup', up)
+      box.removeEventListener('pointercancel', up)
+      m.dragPan.enable()
+      m.doubleClickZoom.enable()
+      m.touchZoomRotate.enable()
+      m.touchZoomRotate.disableRotation()
+      canvas.style.cursor = ''
+      box.style.touchAction = ''
+    }
+  }, [drawing, ready, area])
 
   // Selection: raise the pin or fill the dot, open a Google-style info card, and pan it into view.
   useEffect(() => {
