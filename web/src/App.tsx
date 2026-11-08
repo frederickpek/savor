@@ -1,4 +1,4 @@
-import { BarChart3, CalendarDays, Flame, Layers, List, MapPin, SlidersHorizontal } from 'lucide-react'
+import { BarChart3, CalendarDays, Flame, Lasso, Layers, List, MapPin, SlidersHorizontal, X } from 'lucide-react'
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BibFace, MichelinStar } from './components/Badges'
 import Catalogue, { type CatalogueMode, type Filters, NO_FILTERS, VIEWS, applyFilters } from './components/Catalogue'
@@ -8,6 +8,7 @@ import PickCard from './components/PickCard'
 import PlaceMap, { type Origin } from './components/PlaceMap'
 import Stats from './components/Stats'
 import { type Index, type Pick, type Picks, type Place, api, price } from './lib/api'
+import { type Ring, loadArea, saveArea, within } from './lib/geo'
 
 type View = 'picks' | 'stats' | CatalogueMode
 
@@ -51,6 +52,10 @@ export default function App() {
   const [view, setView] = useState<View>('picks')
   const [filters, setFilters] = useState<Filters>(NO_FILTERS)
   const [error, setError] = useState<string | null>(null)
+  // Area view: the last outline drawn (kept across visits), and whether a drag is tracing a new one.
+  const [area, setAreaState] = useState<Ring | null>(loadArea)
+  const [drawing, setDrawing] = useState(false)
+  const setArea = useCallback((r: Ring | null) => { saveArea(r); setAreaState(r); setSelected(null); setDrawing(false) }, [])
   const scroller = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -70,7 +75,9 @@ export default function App() {
 
   // In the catalogue the map shows whatever the filters match; with picks, everything only on request.
   const browsing = view !== 'picks' && view !== 'stats'
-  const inView = useMemo(() => (browsing ? places.filter(VIEWS[view as CatalogueMode].keep) : places), [browsing, view, places])
+  const inArea = useMemo(() => (area ? within(places, area) : NONE), [places, area])
+  // Before anything's drawn, the area view shows every place on the map so you can see where to circle.
+  const inView = useMemo(() => (view === 'area' ? (area ? inArea : places) : browsing ? places.filter(VIEWS[view as CatalogueMode].keep) : places), [browsing, view, places, inArea, area])
   const filtered = useMemo(() => applyFilters(inView, filters), [inView, filters])
   const count = (mode: CatalogueMode) => places.filter(VIEWS[mode].keep).length
   // Memoised: a fresh [] each render would make the map rebuild its layers and re-pan on every click.
@@ -88,12 +95,15 @@ export default function App() {
   const changeFilters = useCallback((f: Filters) => { setSelected(null); setFilters(f) }, [])
   const openView = (v: View) => {
     setSelected(null)
+    setDrawing(false)
     setView(v)
   }
   const openCatalogue = (mode: CatalogueMode) => {
     setSelected(null)
     setFilters(NO_FILTERS)
     setView(mode)
+    // Nothing drawn yet: go straight to drawing.
+    setDrawing(mode === 'area' && !area)
   }
 
   if (error) {
@@ -123,6 +133,10 @@ export default function App() {
         ))}
 
         <RailHeading className="lg:mt-6">Explore</RailHeading>
+        <RailItem icon={<Lasso className="size-4" />} active={view === 'area'} onClick={() => openCatalogue('area')}
+          hint={area && places.length ? `${inArea.length.toLocaleString()} in your outline` : 'Circle a spot on the map'}>
+          Draw an Area
+        </RailItem>
         <RailItem icon={<Flame className="size-4" />} active={view === 'top200'} onClick={() => openCatalogue('top200')}
           hint="Beli's most popular">
           SG Top 200
@@ -176,7 +190,23 @@ export default function App() {
         {view === 'stats' ? (
           <Stats places={places} onClose={() => openView('picks')} />
         ) : browsing ? (
-          <Catalogue mode={view as CatalogueMode} places={places} filters={filters} onFilters={changeFilters} selected={selected} onSelect={select} onClose={() => { setSelected(null); setView('picks') }} />
+          <Catalogue mode={view as CatalogueMode} places={view === 'area' ? inArea : places} filters={filters} onFilters={changeFilters} selected={selected} onSelect={select}
+            onClose={() => openView('picks')}
+            tools={view === 'area' && (
+              <div className="mt-5 flex flex-wrap items-center gap-2">
+                <button onClick={() => setDrawing((d) => !d)} aria-pressed={drawing}
+                  className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${drawing ? 'bg-teal text-white hover:bg-teal-hover' : 'border border-line bg-white text-ink hover:border-teal-bright'}`}>
+                  <Lasso className="size-4" />{drawing ? 'Drag on the map to draw…' : area ? 'Redraw' : 'Draw on the map'}
+                </button>
+                {area && !drawing && (
+                  <button onClick={() => setArea(null)} className="inline-flex items-center gap-1 px-2 text-sm font-semibold text-teal hover:underline">
+                    <X className="size-3.5" strokeWidth={3} /> Clear outline
+                  </button>
+                )}
+              </div>
+            )}
+            empty={view === 'area' && !area && <>Press and drag on the map to outline an area, around the Botanic Gardens, say, or the CBD.<br />Let go to close the loop; every place inside it shows up here.</>}
+          />
         ) : (<>
         <PanelHeader
           title={label(context)}
@@ -224,7 +254,15 @@ export default function App() {
           selected={selected}
           onSelect={select}
           fitTo={browsing ? 'dots' : 'picks'}
+          area={view === 'area' ? area : null}
+          drawing={view === 'area' && drawing}
+          onArea={setArea}
         />
+        {view === 'area' && drawing && (
+          <div className="pointer-events-none absolute top-4 left-1/2 -translate-x-1/2 rounded-full bg-ink/85 px-4 py-2 text-sm font-semibold text-white shadow-lg">
+            Drag to outline an area · let go to finish
+          </div>
+        )}
         {view === 'picks' && <button
           onClick={() => { setSelected(null); setShowAll((s) => !s) }}
           aria-pressed={showAll}

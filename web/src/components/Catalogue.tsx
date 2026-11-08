@@ -1,5 +1,5 @@
 import { ArrowLeft, Check, ChevronDown, Search, X } from 'lucide-react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { type Place, price, ratingsLabel } from '../lib/api'
 import Badges from './Badges'
 import PanelHeader from './PanelHeader'
@@ -11,13 +11,15 @@ export const NO_FILTERS: Filters = { prices: [], cuisines: [], q: '', scoredOnly
 
 type Sort = 'rank' | 'stars' | 'score' | 'ratings' | 'name'
 // 'all' is the whole catalogue; the rest are curated subsets of it.
-export type CatalogueMode = 'all' | 'top200' | 'michelin' | 'bib'
+export type CatalogueMode = 'all' | 'area' | 'top200' | 'michelin' | 'bib'
 
 const starsOf = (p: Place) => (typeof p.michelin === 'number' ? p.michelin : 0)
 
 // Each view: which places it holds, its default sort, and its header copy.
 export const VIEWS: Record<CatalogueMode, { title: string; keep: (p: Place) => boolean; sort: Sort; sorts: Sort[] }> = {
   all: { title: 'All Places', keep: () => true, sort: 'score', sorts: ['score', 'ratings', 'name'] },
+  // App hands this view only the places inside the drawn area.
+  area: { title: 'Draw an Area', keep: () => true, sort: 'score', sorts: ['score', 'ratings', 'name'] },
   top200: { title: 'SG Top 200', keep: (p) => p.popular_rank != null, sort: 'rank', sorts: ['rank', 'score', 'ratings', 'name'] },
   michelin: { title: 'MICHELIN Stars', keep: (p) => starsOf(p) > 0, sort: 'stars', sorts: ['stars', 'score', 'ratings', 'name'] },
   bib: { title: 'Bib Gourmand', keep: (p) => p.michelin === 'bib', sort: 'score', sorts: ['score', 'ratings', 'name'] },
@@ -60,9 +62,12 @@ type Props = {
   selected: number | null
   onSelect: (id: number) => void
   onClose: () => void
+  // Area view: the draw controls under the subtitle, and copy for before anything is drawn.
+  tools?: ReactNode
+  empty?: ReactNode
 }
 
-export default function Catalogue({ mode, places: all, filters: f, onFilters, selected, onSelect, onClose }: Props) {
+export default function Catalogue({ mode, places: all, filters: f, onFilters, selected, onSelect, onClose, tools, empty }: Props) {
   const view = VIEWS[mode]
   const top = mode === 'top200'
   const places = useMemo(() => all.filter(view.keep), [all, view])
@@ -115,6 +120,8 @@ export default function Catalogue({ mode, places: all, filters: f, onFilters, se
         }
         subtitle={<>{{
           all: <>{results.length.toLocaleString()} of {places.length.toLocaleString()} open places in Singapore · {scored.toLocaleString()} rated so far</>,
+          area: empty ? <>Circle a neighbourhood on the map to list every place inside it</>
+            : <>{places.length.toLocaleString()} place{places.length === 1 ? '' : 's'} inside your outline · {scored.toLocaleString()} rated</>,
           top200: <>Beli's most popular places in Singapore, in Beli's order
             {places.length < 200 && ` · ${200 - places.length} closed ones left out`}</>,
           michelin: <>MICHELIN Guide Singapore 2026 · {stars.map(([n, c]) => `${c} with ${n} star${n > 1 ? 's' : ''}`).join(', ')}</>,
@@ -122,6 +129,7 @@ export default function Catalogue({ mode, places: all, filters: f, onFilters, se
         }[mode]}
         {mode !== 'all' && results.length !== places.length && <> · {results.length} of {places.length} match</>}</>}
       >
+        {tools}
         <label className="relative mt-5 block">
           <Search className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted" strokeWidth={2.5} />
           <input
@@ -167,7 +175,9 @@ export default function Catalogue({ mode, places: all, filters: f, onFilters, se
       </PanelHeader>
 
       <div className="px-2 pt-4 pb-10">
-        {results.length ? (
+        {empty ? (
+          <div className="px-3 py-8 text-center text-sm text-muted">{empty}</div>
+        ) : results.length ? (
           <ul className="grid gap-x-2 xl:grid-cols-2">
             {results.slice(0, shown).map((p) => {
               const open = p.business_id === selected
@@ -201,7 +211,7 @@ export default function Catalogue({ mode, places: all, filters: f, onFilters, se
             })}
           </ul>
         ) : (
-          <p className="px-3 py-8 text-center text-sm text-muted">No places match these filters. Try removing one.</p>
+          <p className="px-3 py-8 text-center text-sm text-muted">{places.length ? 'No places match these filters. Try removing one.' : 'No places inside this outline. Try drawing a bigger one.'}</p>
         )}
       </div>
     </div>
